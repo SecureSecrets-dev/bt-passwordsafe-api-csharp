@@ -162,6 +162,62 @@ var specificSystem = await _client.GetManagedSystems("123");
 | DefaultPasswordDuration | Default duration for password requests in minutes | 60 |
 | AutoRefreshToken | Whether to automatically refresh the OAuth token | true |
 
+## Test Application
+
+The solution includes a test application (`BT.PasswordSafe.SDK.TestApp`) that demonstrates all the key features of the SDK. You can use this app to verify your configuration and test the SDK functionality against your BeyondTrust Password Safe instance.
+
+### Running the Test App
+
+1. **Configure the application**:
+   - Edit the `appsettings.json` file in the `BT.PasswordSafe.SDK.TestApp` directory
+   - Update the `PasswordSafe` section with your instance details:
+     ```json
+     "PasswordSafe": {
+       "BaseUrl": "https://your-instance.beyondtrustcloud.com/BeyondTrust/api/public/v3/",
+       
+       // For API Key authentication
+       "ApiKey": "your-api-key",
+       "RunAsUsername": "your-username",
+       "RunAsPassword": "your-password",
+       "UseOAuth": false,
+       
+       // For OAuth authentication
+       "UseOAuth": true,
+       "OAuthClientId": "your-client-id",
+       "OAuthClientSecret": "your-client-secret"
+     }
+     ```
+   - Update the `TestSettings` section with valid test data for your environment:
+     ```json
+     "TestSettings": {
+       "SystemId": "123",
+       "AccountId": "50",
+       "AccountName": "admin",
+       "SystemName": "YourSystem"
+     }
+     ```
+
+2. **Build and run the application**:
+   ```bash
+   cd BT.PasswordSafe.SDK.TestApp
+   dotnet run
+   ```
+
+3. **Using the compiled executable**:
+   - The application will look for `appsettings.json` in the same directory as the executable
+   - If you're running the compiled executable directly, make sure to copy the `appsettings.json` file to the same directory
+   - The project is configured to automatically copy the `appsettings.json` file to the output directory during build
+
+### Features Demonstrated
+
+The test application demonstrates all the key features of the SDK:
+
+- Authentication (both API Key and OAuth)
+- Retrieving managed systems (all systems and by ID)
+- Retrieving managed accounts (all accounts, by system, by ID, by name)
+- Password retrieval and management
+- Error handling and logging
+
 ## Error Handling
 
 The SDK uses custom exceptions to provide detailed error information:
