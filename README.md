@@ -32,7 +32,8 @@ dotnet add package BT.PasswordSafe.SDK
 // Add to your service collection
 services.AddPasswordSafeClient(options =>
 {
-    options.BaseUrl = "https://your-instance.beyondtrustcloud.com/BeyondTrust/api/public/v3/";
+    options.BaseUrl = "https://your-instance.ps.beyondtrustcloud.com/BeyondTrust/api/public/v3/";
+    //options.BaseUrl = "https://your-instance/BeyondTrust/api/public/v3/";
     
     // API Key Authentication
     options.ApiKey = "your-api-key";
