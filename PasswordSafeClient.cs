@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -183,70 +183,130 @@ namespace PRK.BT.PasswordSafe.SDK
             // First get the managed account details
             var account = await GetManagedAccountById(managedAccountId, cancellationToken).ConfigureAwait(false);
 
-            // Create a password request
-            var request = new PasswordRequest
-            {
-                SystemId = account.ManagedSystemId,
-                AccountId = account.ManagedAccountId,
-                DurationMinutes = _options.DefaultPasswordDuration,
-                Reason = "SDK Password Request"
-            };
-
-            // Request the password
-            var requestResult = await CreatePasswordRequest(request, cancellationToken).ConfigureAwait(false);
-
-            // Get the password using the request ID
-            var response = await _httpClient.GetAsync($"Requests/{requestResult.RequestId}/Password", cancellationToken).ConfigureAwait(false);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new BeyondTrustApiException($"Failed to get password with status code {response.StatusCode}");
-            }
-
-            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            ManagedPassword? password = null;
-
             try
             {
-                // First try to parse as a complex object
-                password = JsonConvert.DeserializeObject<ManagedPassword>(content);
-                if (password != null)
+                // Create a password request
+                var request = new PasswordRequest
                 {
-                    // Set additional properties from the request
-                    password.RequestId = requestResult.RequestId;
-                    password.AccountId = account.ManagedAccountId;
-                    password.SystemId = account.ManagedSystemId;
-                    password.ExpirationDate = requestResult.ExpirationDate;
+                    SystemId = account.ManagedSystemId,
+                    AccountId = account.ManagedAccountId,
+                    DurationMinutes = _options.DefaultPasswordDuration,
+                    Reason = "SDK Password Request"
+                };
 
-                    return password;
+                // Request the password
+                var requestResult = await CreatePasswordRequest(request, cancellationToken).ConfigureAwait(false);
+
+                // Get the password using the request ID
+                var response = await _httpClient.GetAsync($"Credentials/{requestResult.RequestId}", cancellationToken).ConfigureAwait(false);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new BeyondTrustApiException($"Failed to get password with status code {response.StatusCode}");
                 }
-            }
-            catch (JsonException)
-            {
-                // If complex object deserialization fails, try parsing as a simple password string
+
+                var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                ManagedPassword? password = null;
+
                 try
                 {
-                    // The API might just return the password as a plain string
-                    var rawPassword = content.Trim('"');
-                    password = new ManagedPassword
+                    // First try to parse as a complex object
+                    password = JsonConvert.DeserializeObject<ManagedPassword>(content);
+                    if (password != null)
                     {
-                        Password = rawPassword,
-                        RequestId = requestResult.RequestId,
-                        AccountId = account.ManagedAccountId,
-                        SystemId = account.ManagedSystemId,
-                        ExpirationDate = requestResult.ExpirationDate
-                    };
+                        // Set additional properties from the request
+                        password.RequestId = requestResult.RequestId;
+                        password.AccountId = account.ManagedAccountId;
+                        password.SystemId = account.ManagedSystemId;
+                        password.ExpirationDate = requestResult.ExpirationDate;
 
-                    return password;
+                        return password;
+                    }
                 }
-                catch
+                catch (JsonException)
                 {
-                    // If all parsing attempts fail, throw an exception
-                    throw new BeyondTrustApiException($"Failed to parse password response: {content}");
-                }
-            }
+                    // If complex object deserialization fails, try parsing as a simple password string
+                    try
+                    {
+                        // The API might just return the password as a plain string
+                        var rawPassword = content.Trim('"');
+                        password = new ManagedPassword
+                        {
+                            Password = rawPassword,
+                            RequestId = requestResult.RequestId,
+                            AccountId = account.ManagedAccountId,
+                            SystemId = account.ManagedSystemId,
+                            ExpirationDate = requestResult.ExpirationDate
+                        };
 
-            throw new BeyondTrustApiException($"Failed to parse password response: {content}");
+                        return password;
+                    }
+                    catch
+                    {
+                        // If all parsing attempts fail, throw an exception
+                        throw new BeyondTrustApiException($"Failed to parse password response: {content}");
+                    }
+                }
+
+                throw new BeyondTrustApiException($"Failed to parse password response: {content}");
+            }
+            catch (BeyondTrustApiException ex) when (ex.Message.Contains("409"))
+            {
+                // Special handling for 409 Conflict errors
+                _logger?.LogWarning($"Conflict detected when retrieving password for account ID: {managedAccountId}. Attempting to find existing request.");
+                
+                // Try to find an existing active request for this account
+                var existingRequest = await GetExistingRequest(account.ManagedAccountId.ToString(), cancellationToken).ConfigureAwait(false);
+                
+                if (existingRequest != null)
+                {
+                    _logger?.LogInformation($"Found existing request ID: {existingRequest.RequestId} for account ID: {account.ManagedAccountId}. Retrieving password.");
+                    
+                    // Get the password using the existing request ID
+                    var response = await _httpClient.GetAsync($"Credentials/{existingRequest.RequestId}", cancellationToken).ConfigureAwait(false);
+                    
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new BeyondTrustApiException($"Failed to get password with existing request ID {existingRequest.RequestId}. Status code: {response.StatusCode}");
+                    }
+                    
+                    var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    
+                    try
+                    {
+                        // Try to parse as a complex object first
+                        var password = JsonConvert.DeserializeObject<ManagedPassword>(content);
+                        if (password != null)
+                        {
+                            // Set additional properties from the request
+                            password.RequestId = existingRequest.RequestId;
+                            password.AccountId = account.ManagedAccountId;
+                            password.SystemId = account.ManagedSystemId;
+                            password.ExpirationDate = existingRequest.ExpirationDate;
+                            
+                            return password;
+                        }
+                        
+                        // If complex object deserialization doesn't return a valid object, try parsing as a simple string
+                        var rawPassword = content.Trim('"');
+                        return new ManagedPassword
+                        {
+                            Password = rawPassword,
+                            RequestId = existingRequest.RequestId,
+                            AccountId = account.ManagedAccountId,
+                            SystemId = account.ManagedSystemId,
+                            ExpirationDate = existingRequest.ExpirationDate
+                        };
+                    }
+                    catch (Exception parseEx)
+                    {
+                        throw new BeyondTrustApiException($"Failed to parse password response from existing request: {content}", parseEx);
+                    }
+                }
+                
+                // If we couldn't find an existing request, rethrow the original exception
+                throw;
+            }
         }
 
         /// <inheritdoc />
@@ -459,7 +519,24 @@ namespace PRK.BT.PasswordSafe.SDK
 
             var response = await _httpClient.PostAsync("Requests", content, cancellationToken).ConfigureAwait(false);
 
-            if (!response.IsSuccessStatusCode)
+            // If we get a 409 Conflict, it likely means there's already an active request for this account
+            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                _logger?.LogInformation($"Conflict detected when creating password request for account ID: {request.AccountId}. Checking for existing requests.");
+                
+                // Try to find an existing active request for this account
+                var existingRequest = await GetExistingRequest(request.AccountId.ToString(), cancellationToken).ConfigureAwait(false);
+                
+                if (existingRequest != null)
+                {
+                    _logger?.LogInformation($"Found existing request ID: {existingRequest.RequestId} for account ID: {request.AccountId}");
+                    return existingRequest;
+                }
+                
+                // If we couldn't find an existing request, throw the original exception
+                throw new BeyondTrustApiException($"Failed to create password request with status code {response.StatusCode} and no existing request was found");
+            }
+            else if (!response.IsSuccessStatusCode)
             {
                 throw new BeyondTrustApiException($"Failed to create password request with status code {response.StatusCode}");
             }
@@ -500,6 +577,75 @@ namespace PRK.BT.PasswordSafe.SDK
             }
 
             throw new BeyondTrustApiException($"Failed to parse password request response: {responseContent}");
+        }
+
+        /// <summary>
+        /// Gets an existing active request for the specified account ID
+        /// </summary>
+        /// <param name="accountId">The account ID to check for existing requests</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>The existing request if found, null otherwise</returns>
+        private async Task<PasswordRequestResult?> GetExistingRequest(string accountId, CancellationToken cancellationToken = default)
+        {
+            await EnsureAuthenticated(cancellationToken).ConfigureAwait(false);
+
+            _logger?.LogInformation($"Checking for existing requests for account ID: {accountId}");
+
+            // Get all active requests for the current user
+            var response = await _httpClient.GetAsync("Requests?status=active&queue=req", cancellationToken).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger?.LogWarning($"Failed to get existing requests with status code {response.StatusCode}");
+                return null;
+            }
+
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            
+            try
+            {
+                var requests = JsonConvert.DeserializeObject<List<dynamic>>(content);
+                
+                if (requests == null || requests.Count == 0)
+                {
+                    _logger?.LogInformation("No existing requests found");
+                    return null;
+                }
+
+                // Find a request for the specified account ID
+                foreach (var req in requests)
+                {
+                    if (req.AccountID != null && req.AccountID.ToString() == accountId)
+                    {
+                        _logger?.LogInformation($"Found existing request ID: {req.RequestID} for account ID: {accountId}");
+                        
+                        // Create a PasswordRequestResult from the dynamic object
+                        var result = new PasswordRequestResult
+                        {
+                            RequestId = req.RequestID.ToString(),
+                            Status = req.Status.ToString(),
+                            SystemId = req.SystemID != null ? Convert.ToInt32(req.SystemID) : 0,
+                            AccountId = Convert.ToInt32(accountId),
+                            CreatedDate = req.ApprovedDate != null ? 
+                                DateTimeOffset.Parse(req.ApprovedDate.ToString()) : 
+                                DateTimeOffset.UtcNow,
+                            ExpirationDate = req.ExpiresDate != null ? 
+                                DateTimeOffset.Parse(req.ExpiresDate.ToString()) : 
+                                DateTimeOffset.UtcNow.AddMinutes(_options.DefaultPasswordDuration)
+                        };
+                        
+                        return result;
+                    }
+                }
+                
+                _logger?.LogInformation($"No existing requests found for account ID: {accountId}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning($"Error parsing existing requests: {ex.Message}");
+                return null;
+            }
         }
 
         /// <inheritdoc />
