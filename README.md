@@ -45,6 +45,7 @@ services.AddPasswordSafeClient(options =>
     // Other options
     options.TimeoutSeconds = 30;
     options.DefaultPasswordDuration = 60; // minutes
+    options.AutoRefreshToken = true;
 });
 ```
 
@@ -66,9 +67,15 @@ public class PasswordService
         return password.Password;
     }
     
-    public async Task<string> GetPasswordByAccountName(string accountName, string systemName)
+    public async Task<string> GetPasswordByAccountName(string accountName, string systemName, bool isDomainLinked)
     {
-        var password = await _client.GetManagedAccountPasswordByName(accountName, systemName);
+        var password = await _client.GetManagedAccountPasswordByName(accountName, systemName, isDomainLinked);
+        return password.Password;
+    }
+
+    public async Task<string> GetPasswordByAccountName(string accountName, string domainName, bool isDomainLinked)
+    {
+        var password = await _client.GetManagedAccountPasswordByName(accountName, domainName, isDomainLinked);
         return password.Password;
     }
 }
@@ -98,8 +105,12 @@ await _client.CheckInPassword(passwordResult.RequestId, "Task completed");
 // Get all managed accounts
 var accounts = await _client.GetManagedAccounts();
 
-// Get accounts for a specific system
+// Get accounts for a specific system by system ID
 var systemAccounts = await _client.GetManagedAccounts("123");
+
+// Get a specific account by system ID and account name
+var specificAccount = await _client.GetManagedAccounts("123", "admin");
+// This returns a list with a single account if found
 ```
 
 ### Retrieving Managed Systems
@@ -107,6 +118,10 @@ var systemAccounts = await _client.GetManagedAccounts("123");
 ```csharp
 // Get all managed systems
 var systems = await _client.GetManagedSystems();
+
+// Get a specific managed system by ID
+var specificSystem = await _client.GetManagedSystems("123");
+// This returns a list with a single system if found
 ```
 
 ## Configuration Options

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,16 +52,18 @@ namespace PRK.BT.PasswordSafe.SDK.Interfaces
         /// Gets a list of managed accounts
         /// </summary>
         /// <param name="systemId">Optional system ID filter</param>
+        /// <param name="accountName">Optional account name filter (requires systemId to be specified)</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>List of managed accounts</returns>
-        Task<IEnumerable<ManagedAccount>> GetManagedAccounts(string? systemId = null, CancellationToken cancellationToken = default);
+        Task<IEnumerable<ManagedAccount>> GetManagedAccounts(string? systemId = null, string? accountName = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a list of managed systems
         /// </summary>
+        /// <param name="systemId">Optional system ID to retrieve a specific managed system</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>List of managed systems</returns>
-        Task<IEnumerable<ManagedSystem>> GetManagedSystems(CancellationToken cancellationToken = default);
+        Task<IEnumerable<ManagedSystem>> GetManagedSystems(string? systemId = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Creates a password request

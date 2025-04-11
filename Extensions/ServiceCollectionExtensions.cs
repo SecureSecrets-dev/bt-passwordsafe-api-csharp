@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PRK.BT.PasswordSafe.SDK.Interfaces;
@@ -12,13 +12,13 @@ namespace PRK.BT.PasswordSafe.SDK.Extensions
     public static class ServiceCollectionExtensions
     {
         /// <summary>
-        /// Adds Password Safe SDK services to the specified <see cref="IServiceCollection"/>
+        /// Adds Password Safe client services to the specified <see cref="IServiceCollection"/>
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/> to add services to</param>
         /// <param name="configuration">The configuration instance</param>
         /// <param name="configSectionPath">The configuration section path (default: "PasswordSafe")</param>
         /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained</returns>
-        public static IServiceCollection AddPasswordSafeSdk(
+        public static IServiceCollection AddPasswordSafeClient(
             this IServiceCollection services,
             IConfiguration configuration,
             string configSectionPath = "PasswordSafe")
@@ -43,12 +43,12 @@ namespace PRK.BT.PasswordSafe.SDK.Extensions
         }
 
         /// <summary>
-        /// Adds Password Safe SDK services to the specified <see cref="IServiceCollection"/>
+        /// Adds Password Safe client services to the specified <see cref="IServiceCollection"/>
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/> to add services to</param>
         /// <param name="configureOptions">The action to configure the <see cref="PasswordSafeOptions"/></param>
         /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained</returns>
-        public static IServiceCollection AddPasswordSafeSdk(
+        public static IServiceCollection AddPasswordSafeClient(
             this IServiceCollection services,
             Action<PasswordSafeOptions> configureOptions)
         {

@@ -449,13 +449,26 @@ namespace PRK.BT.PasswordSafe.SDK
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<ManagedAccount>> GetManagedAccounts(string? systemId = null, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<ManagedAccount>> GetManagedAccounts(string? systemId = null, string? accountName = null, CancellationToken cancellationToken = default)
         {
             await EnsureAuthenticated(cancellationToken).ConfigureAwait(false);
 
-            string endpoint = string.IsNullOrEmpty(systemId)
-                ? "ManagedAccounts"
-                : $"ManagedSystems/{systemId}/ManagedAccounts";
+            string endpoint;
+            
+            if (string.IsNullOrEmpty(systemId))
+            {
+                endpoint = "ManagedAccounts";
+            }
+            else if (string.IsNullOrEmpty(accountName))
+            {
+                endpoint = $"ManagedSystems/{systemId}/ManagedAccounts";
+            }
+            else
+            {
+                // Use the specific API endpoint for getting a managed account by system ID and account name
+                endpoint = $"ManagedSystems/{systemId}/ManagedAccounts?name={Uri.EscapeDataString(accountName)}";
+                _logger?.LogInformation($"Getting managed account by system ID: {systemId} and account name: {accountName}");
+            }
 
             _logger?.LogInformation($"Getting managed accounts from endpoint: {endpoint}");
 
@@ -467,24 +480,61 @@ namespace PRK.BT.PasswordSafe.SDK
             }
 
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var accounts = JsonConvert.DeserializeObject<List<ManagedAccount>>(content);
-
-            if (accounts == null)
+            
+            // If we're querying by account name, the API returns a single object, not an array
+            if (!string.IsNullOrEmpty(systemId) && !string.IsNullOrEmpty(accountName))
             {
-                throw new BeyondTrustApiException("Failed to deserialize managed accounts response");
+                try
+                {
+                    var account = JsonConvert.DeserializeObject<ManagedAccount>(content);
+                    
+                    if (account == null)
+                    {
+                        throw new BeyondTrustApiException("Failed to deserialize managed account response");
+                    }
+                    
+                    return new List<ManagedAccount> { account };
+                }
+                catch (JsonException)
+                {
+                    // If it fails to deserialize as a single object, try as an array
+                    var accounts = JsonConvert.DeserializeObject<List<ManagedAccount>>(content);
+                    
+                    if (accounts == null)
+                    {
+                        throw new BeyondTrustApiException("Failed to deserialize managed accounts response");
+                    }
+                    
+                    return accounts;
+                }
             }
+            else
+            {
+                var accounts = JsonConvert.DeserializeObject<List<ManagedAccount>>(content);
 
-            return accounts;
+                if (accounts == null)
+                {
+                    throw new BeyondTrustApiException("Failed to deserialize managed accounts response");
+                }
+
+                return accounts;
+            }
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<ManagedSystem>> GetManagedSystems(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<ManagedSystem>> GetManagedSystems(string? systemId = null, CancellationToken cancellationToken = default)
         {
             await EnsureAuthenticated(cancellationToken).ConfigureAwait(false);
 
-            _logger?.LogInformation("Getting managed systems");
+            string endpoint = string.IsNullOrEmpty(systemId)
+                ? "ManagedSystems"
+                : $"ManagedSystems/{systemId}";
 
-            var response = await _httpClient.GetAsync("ManagedSystems", cancellationToken).ConfigureAwait(false);
+            _logger?.LogInformation(string.IsNullOrEmpty(systemId)
+                ? "Getting all managed systems"
+                : $"Getting managed system by ID: {systemId}");
+
+            var response = await _httpClient.GetAsync(endpoint, cancellationToken).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -492,14 +542,45 @@ namespace PRK.BT.PasswordSafe.SDK
             }
 
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var systems = JsonConvert.DeserializeObject<List<ManagedSystem>>(content);
 
-            if (systems == null)
+            // If we're querying by system ID, the API returns a single object, not an array
+            if (!string.IsNullOrEmpty(systemId))
             {
-                throw new BeyondTrustApiException("Failed to deserialize managed systems response");
+                try
+                {
+                    var system = JsonConvert.DeserializeObject<ManagedSystem>(content);
+                    
+                    if (system == null)
+                    {
+                        throw new BeyondTrustApiException("Failed to deserialize managed system response");
+                    }
+                    
+                    return new List<ManagedSystem> { system };
+                }
+                catch (JsonException)
+                {
+                    // If it fails to deserialize as a single object, try as an array
+                    var systems = JsonConvert.DeserializeObject<List<ManagedSystem>>(content);
+                    
+                    if (systems == null)
+                    {
+                        throw new BeyondTrustApiException("Failed to deserialize managed systems response");
+                    }
+                    
+                    return systems;
+                }
             }
+            else
+            {
+                var systems = JsonConvert.DeserializeObject<List<ManagedSystem>>(content);
 
-            return systems;
+                if (systems == null)
+                {
+                    throw new BeyondTrustApiException("Failed to deserialize managed systems response");
+                }
+
+                return systems;
+            }
         }
 
         /// <inheritdoc />
