@@ -1,10 +1,10 @@
 using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using PRK.BT.PasswordSafe.SDK.Interfaces;
-using PRK.BT.PasswordSafe.SDK.Models;
+using BT.PasswordSafe.SDK.Interfaces;
+using BT.PasswordSafe.SDK.Models;
 
-namespace PRK.BT.PasswordSafe.SDK.Extensions
+namespace BT.PasswordSafe.SDK.Extensions
 {
     /// <summary>
     /// Extension methods for <see cref="IServiceCollection"/> to add Password Safe SDK services

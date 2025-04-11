@@ -1,25 +1,27 @@
-# PRK.BT.PasswordSafe.SDK
+# BT.PasswordSafe.SDK
 
 A modern .NET SDK for interacting with BeyondTrust Password Safe API. This SDK provides a simple and intuitive interface for retrieving and managing passwords from BeyondTrust Password Safe.
 
-[![NuGet](https://img.shields.io/nuget/v/PRK.BT.PasswordSafe.SDK.svg)](https://www.nuget.org/packages/PRK.BT.PasswordSafe.SDK/)
+[![NuGet](https://img.shields.io/nuget/v/BT.PasswordSafe.SDK.svg)](https://www.nuget.org/packages/BT.PasswordSafe.SDK/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
 
-- 🔐 **Secure Authentication**: Support for both API Key and OAuth authentication methods
-- 🔄 **Automatic Token Management**: Handles token refresh and expiration automatically
-- 🔍 **Account Discovery**: Find managed accounts by ID or name
-- 🔑 **Password Retrieval**: Get passwords for managed accounts with automatic request handling
-- 🧩 **Conflict Resolution**: Intelligently handles existing password requests (409 Conflict)
-- 📝 **Comprehensive Logging**: Detailed logging for troubleshooting
-- 🧰 **Dependency Injection**: Designed to work with Microsoft's dependency injection
-- ⚡ **Async Support**: Full async/await support for all operations
+- 🔐 **Authentication**: Support for both API Key and OAuth authentication methods
+- 🔄 **Token Management**: Handles token refresh and expiration automatically
+- 🔍 **Managed Accounts**: Find and manage accounts by ID, name, or system
+- 🔎 **Managed Systems**: Retrieve managed systems by ID or get a complete list
+- 🔑 **Password Retrieval**: Get passwords with automatic request handling and conflict resolution
+- 🧩 **Error Handling**: Gracefully handles API errors including 409 Conflict scenarios
+- 📝 **Detailed Logging**: Comprehensive logging for troubleshooting and auditing
+- 🧰 **Dependency Injection**: Seamlessly integrates with Microsoft's dependency injection
+- ⚡ **Full Async Support**: Complete async/await pattern implementation for all operations
+- 🛡️ **Type Safety**: Strongly-typed models for all API interactions
 
 ## Installation
 
 ```bash
-dotnet add package PRK.BT.PasswordSafe.SDK
+dotnet add package BT.PasswordSafe.SDK
 ```
 
 ## Quick Start
@@ -48,6 +50,26 @@ services.AddPasswordSafeClient(options =>
     options.AutoRefreshToken = true;
 });
 ```
+
+### Authentication
+
+The SDK handles authentication automatically when you make API calls. However, you can also explicitly authenticate if needed:
+
+```csharp
+// Authenticate with the Password Safe API
+var authResult = await _client.Authenticate();
+
+// The authentication result contains the token information
+Console.WriteLine($"Token Type: {authResult.TokenType}");
+Console.WriteLine($"Expires In: {authResult.ExpiresIn} seconds");
+```
+
+The SDK supports two authentication methods:
+
+1. **API Key Authentication**: Uses the API Key, RunAs Username, and RunAs Password
+2. **OAuth Authentication**: Uses Client ID and Client Secret for OAuth 2.0 authentication
+
+The authentication method is determined by the `UseOAuth` option. When set to `true`, OAuth authentication is used; otherwise, API key authentication is used.
 
 ### Retrieve a Password
 
@@ -137,6 +159,7 @@ var specificSystem = await _client.GetManagedSystems("123");
 | OAuthClientSecret | OAuth client secret | Required for OAuth auth |
 | TimeoutSeconds | HTTP request timeout in seconds | 30 |
 | DefaultPasswordDuration | Default duration for password requests in minutes | 60 |
+| AutoRefreshToken | Whether to automatically refresh the OAuth token | true |
 
 ## Error Handling
 

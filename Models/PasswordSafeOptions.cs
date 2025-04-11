@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PRK.BT.PasswordSafe.SDK.Models
+namespace BT.PasswordSafe.SDK.Models
 {
     /// <summary>
     /// Configuration options for the Password Safe client

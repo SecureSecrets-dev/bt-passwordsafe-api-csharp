@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PRK.BT.PasswordSafe.SDK.Exceptions
+namespace BT.PasswordSafe.SDK.Exceptions
 {
     /// <summary>
     /// Exception thrown when authentication with the BeyondTrust Password Safe API fails

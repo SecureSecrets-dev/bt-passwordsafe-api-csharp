@@ -5,14 +5,14 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using PRK.BT.PasswordSafe.SDK.Exceptions;
-using PRK.BT.PasswordSafe.SDK.Interfaces;
-using PRK.BT.PasswordSafe.SDK.Models;
+using BT.PasswordSafe.SDK.Exceptions;
+using BT.PasswordSafe.SDK.Interfaces;
+using BT.PasswordSafe.SDK.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
-namespace PRK.BT.PasswordSafe.SDK
+namespace BT.PasswordSafe.SDK
 {
     /// <summary>
     /// Client for interacting with the Password Safe API

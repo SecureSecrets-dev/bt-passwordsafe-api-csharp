@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace PRK.BT.PasswordSafe.SDK.Models
+namespace BT.PasswordSafe.SDK.Models
 {
     /// <summary>
     /// Represents the result of an authentication request to the BeyondTrust Password Safe API
