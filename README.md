@@ -26,14 +26,28 @@ dotnet add package BT.PasswordSafe.SDK
 
 ## Quick Start
 
+### Install the Package
+
+```bash
+dotnet add package BT.PasswordSafe.SDK
+```
+
+### Add Required Namespaces
+
+```csharp
+using BT.PasswordSafe.SDK;
+using BT.PasswordSafe.SDK.Extensions;
+using BT.PasswordSafe.SDK.Interfaces;
+using BT.PasswordSafe.SDK.Models;
+```
+
 ### Register Services
 
 ```csharp
 // Add to your service collection
 services.AddPasswordSafeClient(options =>
 {
-    options.BaseUrl = "https://your-instance.ps.beyondtrustcloud.com/BeyondTrust/api/public/v3/";
-    //options.BaseUrl = "https://your-instance/BeyondTrust/api/public/v3/";
+    options.BaseUrl = "https://your-instance.beyondtrustcloud.com/BeyondTrust/api/public/v3/";
     
     // API Key Authentication
     options.ApiKey = "your-api-key";
@@ -50,6 +64,12 @@ services.AddPasswordSafeClient(options =>
     options.DefaultPasswordDuration = 60; // minutes
     options.AutoRefreshToken = true;
 });
+
+// Build the service provider
+var serviceProvider = services.BuildServiceProvider();
+
+// Get the client from the service provider
+var client = serviceProvider.GetRequiredService<IPasswordSafeClient>();
 ```
 
 ### Authentication
