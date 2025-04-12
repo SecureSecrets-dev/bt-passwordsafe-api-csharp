@@ -72,6 +72,21 @@ var serviceProvider = services.BuildServiceProvider();
 var client = serviceProvider.GetRequiredService<IPasswordSafeClient>();
 ```
 
+### Configuration Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| BaseUrl | The base URL of your BeyondTrust Password Safe API | Required |
+| ApiKey | API key for authentication | Required for API Key auth |
+| RunAsUsername | Username for run-as authentication | Required for API Key auth |
+| RunAsPassword | Password for run-as authentication | Required for API Key auth |
+| UseOAuth | Whether to use OAuth authentication | false |
+| OAuthClientId | OAuth client ID | Required for OAuth auth |
+| OAuthClientSecret | OAuth client secret | Required for OAuth auth |
+| TimeoutSeconds | HTTP request timeout in seconds | 30 |
+| DefaultPasswordDuration | Default duration for password requests in minutes | 60 |
+| AutoRefreshToken | Whether to automatically refresh the OAuth token | true |
+
 ### Authentication
 
 The SDK handles authentication automatically when you make API calls. However, you can also explicitly authenticate if needed:
@@ -166,21 +181,6 @@ var systems = await _client.GetManagedSystems();
 var specificSystem = await _client.GetManagedSystems("123");
 // This returns a list with a single system if found
 ```
-
-## Configuration Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| BaseUrl | The base URL of your BeyondTrust Password Safe API | Required |
-| ApiKey | API key for authentication | Required for API Key auth |
-| RunAsUsername | Username for run-as authentication | Required for API Key auth |
-| RunAsPassword | Password for run-as authentication | Required for API Key auth |
-| UseOAuth | Whether to use OAuth authentication | false |
-| OAuthClientId | OAuth client ID | Required for OAuth auth |
-| OAuthClientSecret | OAuth client secret | Required for OAuth auth |
-| TimeoutSeconds | HTTP request timeout in seconds | 30 |
-| DefaultPasswordDuration | Default duration for password requests in minutes | 60 |
-| AutoRefreshToken | Whether to automatically refresh the OAuth token | true |
 
 ## Test Application
 
