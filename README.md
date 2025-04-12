@@ -102,7 +102,7 @@ In your `appsettings.json`:
 | BaseUrl | The base URL of your BeyondTrust Password Safe API | Required |
 | ApiKey | API key for authentication | Required for API Key auth |
 | RunAsUsername | Username for run-as authentication | Required for API Key auth |
-| RunAsPassword | Password for run-as authentication | Required for API Key auth |
+| RunAsPassword | Password for run-as authentication | Optional |
 | UseOAuth | Whether to use OAuth authentication | false |
 | OAuthClientId | OAuth client ID | Required for OAuth auth |
 | OAuthClientSecret | OAuth client secret | Required for OAuth auth |

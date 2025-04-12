@@ -83,7 +83,15 @@ namespace BT.PasswordSafe.API
         private async Task<AuthenticationResult> AuthenticateWithApiKey(CancellationToken cancellationToken)
         {
             // Set the API key in the request header
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"PS-Auth key={_options.ApiKey}; runas={_options.RunAsUsername}; pwd={_options.RunAsPassword};");
+            var authHeader = $"PS-Auth key={_options.ApiKey}; runas={_options.RunAsUsername}";
+            
+            // Only add password if it's provided
+            if (!string.IsNullOrEmpty(_options.RunAsPassword))
+            {
+                authHeader += $"; pwd=[{_options.RunAsPassword}]";
+            }
+            
+            _httpClient.DefaultRequestHeaders.Add("Authorization", authHeader);
 
             // Make a simple request to verify the API key works
             var response = await _httpClient.GetAsync("Auth", cancellationToken).ConfigureAwait(false);
