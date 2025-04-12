@@ -96,7 +96,7 @@ Console.WriteLine($"Expires In: {authResult.ExpiresIn} seconds");
 
 The SDK supports two authentication methods:
 
-1. **API Key Authentication**: Uses the API Key, RunAs Username, and RunAs Password
+1. **PS-Auth Authentication**: Uses the API Key, RunAs Username, and RunAs Password
 2. **OAuth Authentication**: Uses Client ID and Client Secret for OAuth 2.0 authentication
 
 The authentication method is determined by the `UseOAuth` option. When set to `true`, OAuth authentication is used; otherwise, API key authentication is used.
