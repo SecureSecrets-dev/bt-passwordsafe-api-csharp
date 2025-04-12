@@ -1,6 +1,6 @@
 # BT.PasswordSafe.API
 
-A modern .NET SDK for interacting with BeyondTrust Password Safe API. This SDK provides a simple and intuitive interface for retrieving and managing passwords from BeyondTrust Password Safe.
+A .NET package for interacting with BeyondTrust Password Safe API. This package provides a simple and intuitive interface for retrieving passwords, managed accounts and managed systems from BeyondTrust Password Safe.
 
 [![NuGet](https://img.shields.io/nuget/v/BT.PasswordSafe.API.svg)](https://www.nuget.org/packages/BT.PasswordSafe.API/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -25,12 +25,6 @@ dotnet add package BT.PasswordSafe.API
 ```
 
 ## Quick Start
-
-### Install the Package
-
-```bash
-dotnet add package BT.PasswordSafe.API
-```
 
 ### Add Required Namespaces
 

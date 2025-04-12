@@ -1,6 +1,6 @@
 # BT.PasswordSafe.API
 
-A modern .NET SDK for interacting with BeyondTrust Password Safe API. This SDK provides a simple and intuitive interface for retrieving and managing passwords from BeyondTrust Password Safe.
+A .NET package for interacting with BeyondTrust Password Safe API. This package provides a simple and intuitive interface for retrieving passwords, managed accounts and managed systems from BeyondTrust Password Safe.
 
 ## Features
 
@@ -67,6 +67,21 @@ var serviceProvider = services.BuildServiceProvider();
 var client = serviceProvider.GetRequiredService<IPasswordSafeClient>();
 ```
 
+### Configuration Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| BaseUrl | The base URL of your BeyondTrust Password Safe API | Required |
+| ApiKey | API key for authentication | Required for API Key auth |
+| RunAsUsername | Username for run-as authentication | Required for API Key auth |
+| RunAsPassword | Password for run-as authentication | Required for API Key auth |
+| UseOAuth | Whether to use OAuth authentication | false |
+| OAuthClientId | OAuth client ID | Required for OAuth auth |
+| OAuthClientSecret | OAuth client secret | Required for OAuth auth |
+| TimeoutSeconds | HTTP request timeout in seconds | 30 |
+| DefaultPasswordDuration | Default duration for password requests in minutes | 60 |
+| AutoRefreshToken | Whether to automatically refresh the OAuth token | true |
+
 ### Using with ASP.NET Core
 
 In `Program.cs` or `Startup.cs`:
@@ -114,8 +129,6 @@ public class PasswordService
 }
 ```
 
-## Usage Examples
-
 ### Authentication
 
 ```csharp
@@ -123,6 +136,31 @@ public class PasswordService
 var authResult = await client.Authenticate();
 Console.WriteLine($"Token Type: {authResult.TokenType}");
 Console.WriteLine($"Expires In: {authResult.ExpiresIn} seconds");
+```
+
+The SDK supports two authentication methods:
+
+1. **API Key Authentication**: Uses the API Key, RunAs Username, and RunAs Password
+2. **OAuth Authentication**: Uses Client ID and Client Secret for OAuth 2.0 authentication
+
+The authentication method is determined by the `UseOAuth` option. When set to `true`, OAuth authentication is used; otherwise, API key authentication is used.
+
+## Advanced Usage
+
+### Handling Existing Requests
+
+The SDK automatically handles cases where a password request already exists (409 Conflict). It will attempt to find and use the existing request instead of creating a new one.
+
+```csharp
+// This will work even if there's already an active request for this account
+var password = await client.GetManagedAccountPasswordById("50");
+```
+
+### Checking In Passwords
+
+```csharp
+// Check in a password when you're done with it
+await client.CheckInPassword(passwordResult.RequestId, "Task completed");
 ```
 
 ### Retrieving Managed Accounts
@@ -136,6 +174,7 @@ var systemAccounts = await client.GetManagedAccounts("123");
 
 // Get a specific account by system ID and account name
 var specificAccount = await client.GetManagedAccounts("123", "admin");
+// This returns a list with a single account if found
 ```
 
 ### Retrieving Managed Systems
@@ -146,6 +185,7 @@ var systems = await client.GetManagedSystems();
 
 // Get a specific managed system by ID
 var specificSystem = await client.GetManagedSystems("123");
+// This returns a list with a single system if found
 ```
 
 ### Retrieving Passwords
@@ -161,14 +201,14 @@ Console.WriteLine($"Expires: {password.ExpirationDate}");
 var password = await client.GetManagedAccountPasswordByName("admin", "DC01");
 ```
 
-### Checking In Passwords
-
-```csharp
-// Check in a password when you're done with it
-await client.CheckInPassword(password.RequestId, "Task completed");
-```
-
 ## Error Handling
+
+The SDK uses custom exceptions to provide detailed error information:
+
+- `BeyondTrustApiException`: General API errors
+- `BeyondTrustAuthenticationException`: Authentication-specific errors
+
+Example:
 
 ```csharp
 try
@@ -178,15 +218,19 @@ try
 catch (BeyondTrustApiException ex)
 {
     // Handle API errors
-    Console.WriteLine($"API Error: {ex.Message}");
+    logger.LogError(ex, "Failed to retrieve password");
 }
 catch (BeyondTrustAuthenticationException ex)
 {
     // Handle authentication errors
-    Console.WriteLine($"Authentication Error: {ex.Message}");
+    logger.LogError(ex, "Authentication failed");
 }
 ```
 
 ## License
 
 This project is licensed under the MIT License.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
