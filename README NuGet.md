@@ -1,4 +1,4 @@
-# BT.PasswordSafe.SDK
+# BT.PasswordSafe.API
 
 A modern .NET SDK for interacting with BeyondTrust Password Safe API. This SDK provides a simple and intuitive interface for retrieving and managing passwords from BeyondTrust Password Safe.
 
@@ -18,7 +18,7 @@ A modern .NET SDK for interacting with BeyondTrust Password Safe API. This SDK p
 ## Installation
 
 ```bash
-dotnet add package BT.PasswordSafe.SDK
+dotnet add package BT.PasswordSafe.API
 ```
 
 ## Quick Start
@@ -26,10 +26,10 @@ dotnet add package BT.PasswordSafe.SDK
 ### Add Required Namespaces
 
 ```csharp
-using BT.PasswordSafe.SDK;
-using BT.PasswordSafe.SDK.Extensions;
-using BT.PasswordSafe.SDK.Interfaces;
-using BT.PasswordSafe.SDK.Models;
+using BT.PasswordSafe.API;
+using BT.PasswordSafe.API.Extensions;
+using BT.PasswordSafe.API.Interfaces;
+using BT.PasswordSafe.API.Models;
 using Microsoft.Extensions.DependencyInjection;
 ```
 

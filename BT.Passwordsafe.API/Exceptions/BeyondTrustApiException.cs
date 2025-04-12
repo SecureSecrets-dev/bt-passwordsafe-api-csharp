@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BT.PasswordSafe.SDK.Exceptions
+namespace BT.PasswordSafe.API.Exceptions
 {
     /// <summary>
     /// Exception thrown when an error occurs while communicating with the BeyondTrust Password Safe API

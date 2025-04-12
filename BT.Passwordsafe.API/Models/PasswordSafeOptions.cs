@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BT.PasswordSafe.SDK.Models
+namespace BT.PasswordSafe.API.Models
 {
     /// <summary>
     /// Configuration options for the Password Safe client

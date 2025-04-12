@@ -1,20 +1,20 @@
-using BT.PasswordSafe.SDK;
-using BT.PasswordSafe.SDK.Extensions;
-using BT.PasswordSafe.SDK.Interfaces;
-using BT.PasswordSafe.SDK.Models;
+using BT.PasswordSafe.API;
+using BT.PasswordSafe.API.Extensions;
+using BT.PasswordSafe.API.Interfaces;
+using BT.PasswordSafe.API.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace BT.PasswordSafe.SDK.TestApp
+namespace BT.PasswordSafe.API.TestApp
 {
     class Program
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("BT.PasswordSafe.SDK Test Application");
+            Console.WriteLine("BT.PasswordSafe.API Test Application");
             Console.WriteLine("====================================");
 
             // Set up configuration

@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using BT.PasswordSafe.SDK.Models;
+using BT.PasswordSafe.API.Models;
 
-namespace BT.PasswordSafe.SDK.Interfaces
+namespace BT.PasswordSafe.API.Interfaces
 {
     /// <summary>
     /// Interface for the Password Safe client

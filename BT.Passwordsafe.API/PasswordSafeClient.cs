@@ -5,14 +5,14 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BT.PasswordSafe.SDK.Exceptions;
-using BT.PasswordSafe.SDK.Interfaces;
-using BT.PasswordSafe.SDK.Models;
+using BT.PasswordSafe.API.Exceptions;
+using BT.PasswordSafe.API.Interfaces;
+using BT.PasswordSafe.API.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
-namespace BT.PasswordSafe.SDK
+namespace BT.PasswordSafe.API
 {
     /// <summary>
     /// Client for interacting with the Password Safe API
@@ -191,7 +191,7 @@ namespace BT.PasswordSafe.SDK
                     SystemId = account.ManagedSystemId,
                     AccountId = account.ManagedAccountId,
                     DurationMinutes = _options.DefaultPasswordDuration,
-                    Reason = "SDK Password Request"
+                    Reason = "API Password Request"
                 };
 
                 // Request the password
@@ -746,7 +746,7 @@ namespace BT.PasswordSafe.SDK
                 // Create a proper request body with the user-provided reason (or default if not provided)
                 var requestBody = new
                 {
-                    Reason = reason ?? "SDK Check-in"
+                    Reason = reason ?? "API Check-in"
                 };
 
                 var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");

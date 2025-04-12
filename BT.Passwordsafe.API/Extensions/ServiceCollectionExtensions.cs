@@ -1,13 +1,13 @@
 using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using BT.PasswordSafe.SDK.Interfaces;
-using BT.PasswordSafe.SDK.Models;
+using BT.PasswordSafe.API.Interfaces;
+using BT.PasswordSafe.API.Models;
 
-namespace BT.PasswordSafe.SDK.Extensions
+namespace BT.PasswordSafe.API.Extensions
 {
     /// <summary>
-    /// Extension methods for <see cref="IServiceCollection"/> to add Password Safe SDK services
+    /// Extension methods for <see cref="IServiceCollection"/> to add Password Safe API services
     /// </summary>
     public static class ServiceCollectionExtensions
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace BT.PasswordSafe.SDK.Models
+namespace BT.PasswordSafe.API.Models
 {
     /// <summary>
     /// Represents a managed system in BeyondTrust Password Safe

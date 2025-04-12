@@ -1,8 +1,8 @@
-# BT.PasswordSafe.SDK
+# BT.PasswordSafe.API
 
 A modern .NET SDK for interacting with BeyondTrust Password Safe API. This SDK provides a simple and intuitive interface for retrieving and managing passwords from BeyondTrust Password Safe.
 
-[![NuGet](https://img.shields.io/nuget/v/BT.PasswordSafe.SDK.svg)](https://www.nuget.org/packages/BT.PasswordSafe.SDK/)
+[![NuGet](https://img.shields.io/nuget/v/BT.PasswordSafe.API.svg)](https://www.nuget.org/packages/BT.PasswordSafe.API/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
@@ -21,7 +21,7 @@ A modern .NET SDK for interacting with BeyondTrust Password Safe API. This SDK p
 ## Installation
 
 ```bash
-dotnet add package BT.PasswordSafe.SDK
+dotnet add package BT.PasswordSafe.API
 ```
 
 ## Quick Start
@@ -29,16 +29,16 @@ dotnet add package BT.PasswordSafe.SDK
 ### Install the Package
 
 ```bash
-dotnet add package BT.PasswordSafe.SDK
+dotnet add package BT.PasswordSafe.API
 ```
 
 ### Add Required Namespaces
 
 ```csharp
-using BT.PasswordSafe.SDK;
-using BT.PasswordSafe.SDK.Extensions;
-using BT.PasswordSafe.SDK.Interfaces;
-using BT.PasswordSafe.SDK.Models;
+using BT.PasswordSafe.API;
+using BT.PasswordSafe.API.Extensions;
+using BT.PasswordSafe.API.Interfaces;
+using BT.PasswordSafe.API.Models;
 ```
 
 ### Register Services
@@ -184,12 +184,12 @@ var specificSystem = await _client.GetManagedSystems("123");
 
 ## Test Application
 
-The solution includes a test application (`BT.PasswordSafe.SDK.TestApp`) that demonstrates all the key features of the SDK. You can use this app to verify your configuration and test the SDK functionality against your BeyondTrust Password Safe instance.
+The solution includes a test application (`BT.PasswordSafe.API.TestApp`) that demonstrates all the key features of the SDK. You can use this app to verify your configuration and test the SDK functionality against your BeyondTrust Password Safe instance.
 
 ### Running the Test App
 
 1. **Configure the application**:
-   - Edit the `appsettings.json` file in the `BT.PasswordSafe.SDK.TestApp` directory
+   - Edit the `appsettings.json` file in the `BT.PasswordSafe.API.TestApp` directory
    - Update the `PasswordSafe` section with your instance details:
      ```json
      "PasswordSafe": {
@@ -219,7 +219,7 @@ The solution includes a test application (`BT.PasswordSafe.SDK.TestApp`) that de
 
 2. **Build and run the application**:
    ```bash
-   cd BT.PasswordSafe.SDK.TestApp
+   cd BT.PasswordSafe.API.TestApp
    dotnet run
    ```
 
