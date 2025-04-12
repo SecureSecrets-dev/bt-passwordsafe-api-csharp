@@ -90,14 +90,32 @@ namespace BT.PasswordSafe.API.TestApp
                         Console.WriteLine($"\nTesting GetManagedAccountPasswordById with ID: {accountId}...");
                         var password = await client.GetManagedAccountPasswordById(accountId);
                         Console.WriteLine($"Retrieved password for account ID {accountId}");
-                        Console.WriteLine($"Password: {password.Password.Substring(0, 1)}*****");
+                        
+                        // Add null check for password.Password
+                        if (!string.IsNullOrEmpty(password.Password))
+                        {
+                            Console.WriteLine($"Password: {password.Password.Substring(0, 1)}*****");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Password: [Empty]");
+                        }
+                        
                         Console.WriteLine($"Request ID: {password.RequestId}");
                         Console.WriteLine($"Expires: {password.ExpirationDate}");
 
                         // Test checking in the password
-                        Console.WriteLine($"\nTesting CheckInPassword for request ID: {password.RequestId}...");
-                        var checkInResult = await client.CheckInPassword(password.RequestId, "Test completed");
-                        Console.WriteLine($"Check-in result: {(checkInResult ? "Success" : "Failed")}");
+                        // Add null check for password.RequestId
+                        if (!string.IsNullOrEmpty(password.RequestId))
+                        {
+                            Console.WriteLine($"\nTesting CheckInPassword for request ID: {password.RequestId}...");
+                            var checkInResult = await client.CheckInPassword(password.RequestId, "Test completed");
+                            Console.WriteLine($"Check-in result: {(checkInResult ? "Success" : "Failed")}");
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nSkipping CheckInPassword - Request ID is null");
+                        }
                     }
                     catch (Exception ex)
                     {

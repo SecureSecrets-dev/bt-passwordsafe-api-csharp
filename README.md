@@ -42,6 +42,7 @@ using BT.PasswordSafe.API.Models;
 services.AddPasswordSafeClient(options =>
 {
     options.BaseUrl = "https://your-instance.beyondtrustcloud.com/BeyondTrust/api/public/v3/";
+    //options.BaseUrl = "https://your-instance/BeyondTrust/api/public/v3/";
     
     // API Key Authentication
     options.ApiKey = "your-api-key";
@@ -66,6 +67,34 @@ var serviceProvider = services.BuildServiceProvider();
 var client = serviceProvider.GetRequiredService<IPasswordSafeClient>();
 ```
 
+### Alternate Registration Method using appsettings.json
+
+In `Program.cs` or `Startup.cs`:
+
+```csharp
+// Add the PasswordSafe client to the service collection
+builder.Services.AddPasswordSafeClient(options => 
+    builder.Configuration.GetSection("PasswordSafe").Bind(options));
+```
+
+In your `appsettings.json`:
+
+```json
+{
+  "PasswordSafe": {
+    "BaseUrl": "https://your-instance.beyondtrustcloud.com/BeyondTrust/api/public/v3/",
+    //"BaseUrl": "https://your-instance/BeyondTrust/api/public/v3/",
+    "ApiKey": "your-api-key",
+    "RunAsUsername": "your-username",
+    "RunAsPassword": "your-password",
+    "UseOAuth": false,
+    "TimeoutSeconds": 30,
+    "DefaultPasswordDuration": 60,
+    "AutoRefreshToken": true
+  }
+}
+```
+
 ### Configuration Options
 
 | Option | Description | Default |
@@ -80,6 +109,26 @@ var client = serviceProvider.GetRequiredService<IPasswordSafeClient>();
 | TimeoutSeconds | HTTP request timeout in seconds | 30 |
 | DefaultPasswordDuration | Default duration for password requests in minutes | 60 |
 | AutoRefreshToken | Whether to automatically refresh the OAuth token | true |
+
+### Initialize the Client
+
+```csharp
+public class PasswordService
+{
+    private readonly IPasswordSafeClient _client;
+    
+    public PasswordService(IPasswordSafeClient client)
+    {
+        _client = client; // Injected by the DI container
+    }
+    
+    public async Task<string> GetPasswordByAccountId(string accountId)
+    {
+        var password = await _client.GetManagedAccountPasswordById(accountId);
+        return password.Password;
+    }
+}
+```
 
 ### Authentication
 
@@ -101,36 +150,17 @@ The SDK supports two authentication methods:
 
 The authentication method is determined by the `UseOAuth` option. When set to `true`, OAuth authentication is used; otherwise, API key authentication is used.
 
-### Retrieve a Password
+### Retrieving Passwords
 
 ```csharp
-public class PasswordService
-{
-    private readonly IPasswordSafeClient _client;
-    
-    public PasswordService(IPasswordSafeClient client)
-    {
-        _client = client;
-    }
-    
-    public async Task<string> GetPasswordByAccountId(string accountId)
-    {
-        var password = await _client.GetManagedAccountPasswordById(accountId);
-        return password.Password;
-    }
-    
-    public async Task<string> GetPasswordByAccountName(string accountName, string systemName, bool isDomainLinked)
-    {
-        var password = await _client.GetManagedAccountPasswordByName(accountName, systemName, isDomainLinked);
-        return password.Password;
-    }
+// Get password by account ID
+var password = await _client.GetManagedAccountPasswordById("50");
+Console.WriteLine($"Password: {password.Password}");
+Console.WriteLine($"Request ID: {password.RequestId}");
+Console.WriteLine($"Expires: {password.ExpirationDate}");
 
-    public async Task<string> GetPasswordByAccountName(string accountName, string domainName, bool isDomainLinked)
-    {
-        var password = await _client.GetManagedAccountPasswordByName(accountName, domainName, isDomainLinked);
-        return password.Password;
-    }
-}
+// Get password by account name and system name
+var password = await _client.GetManagedAccountPasswordByName("admin", "DC01");
 ```
 
 ## Advanced Usage
@@ -187,7 +217,8 @@ The solution includes a test application (`BT.PasswordSafe.API.TestApp`) that de
    - Update the `PasswordSafe` section with your instance details:
      ```json
      "PasswordSafe": {
-       "BaseUrl": "https://your-instance.beyondtrustcloud.com/BeyondTrust/api/public/v3/",
+       "BaseUrl": "https://your-instance.ps.beyondtrustcloud.com/BeyondTrust/api/public/v3/",
+       //"BaseUrl": "https://your-instance/BeyondTrust/api/public/v3/",
        
        // For API Key authentication
        "ApiKey": "your-api-key",

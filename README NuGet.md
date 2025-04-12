@@ -30,7 +30,6 @@ using BT.PasswordSafe.API;
 using BT.PasswordSafe.API.Extensions;
 using BT.PasswordSafe.API.Interfaces;
 using BT.PasswordSafe.API.Models;
-using Microsoft.Extensions.DependencyInjection;
 ```
 
 ### Register Services
@@ -43,6 +42,7 @@ var services = new ServiceCollection();
 services.AddPasswordSafeClient(options =>
 {
     options.BaseUrl = "https://your-instance.beyondtrustcloud.com/BeyondTrust/api/public/v3/";
+    //options.BaseUrl = "https://your-instance/BeyondTrust/api/public/v3/";
     
     // API Key Authentication
     options.ApiKey = "your-api-key";
@@ -67,22 +67,7 @@ var serviceProvider = services.BuildServiceProvider();
 var client = serviceProvider.GetRequiredService<IPasswordSafeClient>();
 ```
 
-### Configuration Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| BaseUrl | The base URL of your BeyondTrust Password Safe API | Required |
-| ApiKey | API key for authentication | Required for API Key auth |
-| RunAsUsername | Username for run-as authentication | Required for API Key auth |
-| RunAsPassword | Password for run-as authentication | Required for API Key auth |
-| UseOAuth | Whether to use OAuth authentication | false |
-| OAuthClientId | OAuth client ID | Required for OAuth auth |
-| OAuthClientSecret | OAuth client secret | Required for OAuth auth |
-| TimeoutSeconds | HTTP request timeout in seconds | 30 |
-| DefaultPasswordDuration | Default duration for password requests in minutes | 60 |
-| AutoRefreshToken | Whether to automatically refresh the OAuth token | true |
-
-### Using with ASP.NET Core
+### Alternate Registration Method using appsettings.json
 
 In `Program.cs` or `Startup.cs`:
 
@@ -98,6 +83,7 @@ In your `appsettings.json`:
 {
   "PasswordSafe": {
     "BaseUrl": "https://your-instance.beyondtrustcloud.com/BeyondTrust/api/public/v3/",
+    //"BaseUrl": "https://your-instance/BeyondTrust/api/public/v3/",
     "ApiKey": "your-api-key",
     "RunAsUsername": "your-username",
     "RunAsPassword": "your-password",
@@ -109,7 +95,22 @@ In your `appsettings.json`:
 }
 ```
 
-In your controller or service:
+### Configuration Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| BaseUrl | The base URL of your BeyondTrust Password Safe API | Required |
+| ApiKey | API key for authentication | Required for API Key auth |
+| RunAsUsername | Username for run-as authentication | Required for API Key auth |
+| RunAsPassword | Password for run-as authentication | Required for API Key auth |
+| UseOAuth | Whether to use OAuth authentication | false |
+| OAuthClientId | OAuth client ID | Required for OAuth auth |
+| OAuthClientSecret | OAuth client secret | Required for OAuth auth |
+| TimeoutSeconds | HTTP request timeout in seconds | 30 |
+| DefaultPasswordDuration | Default duration for password requests in minutes | 60 |
+| AutoRefreshToken | Whether to automatically refresh the OAuth token | true |
+
+### Initialize the Client
 
 ```csharp
 public class PasswordService
@@ -145,6 +146,19 @@ The SDK supports two authentication methods:
 
 The authentication method is determined by the `UseOAuth` option. When set to `true`, OAuth authentication is used; otherwise, API key authentication is used.
 
+### Retrieving Passwords
+
+```csharp
+// Get password by account ID
+var password = await _client.GetManagedAccountPasswordById("50");
+Console.WriteLine($"Password: {password.Password}");
+Console.WriteLine($"Request ID: {password.RequestId}");
+Console.WriteLine($"Expires: {password.ExpirationDate}");
+
+// Get password by account name and system name
+var password = await _client.GetManagedAccountPasswordByName("admin", "DC01");
+```
+
 ## Advanced Usage
 
 ### Handling Existing Requests
@@ -153,27 +167,27 @@ The SDK automatically handles cases where a password request already exists (409
 
 ```csharp
 // This will work even if there's already an active request for this account
-var password = await client.GetManagedAccountPasswordById("50");
+var password = await _client.GetManagedAccountPasswordById("50");
 ```
 
 ### Checking In Passwords
 
 ```csharp
 // Check in a password when you're done with it
-await client.CheckInPassword(passwordResult.RequestId, "Task completed");
+await _client.CheckInPassword(passwordResult.RequestId, "Task completed");
 ```
 
 ### Retrieving Managed Accounts
 
 ```csharp
 // Get all managed accounts
-var accounts = await client.GetManagedAccounts();
+var accounts = await _client.GetManagedAccounts();
 
 // Get accounts for a specific system by system ID
-var systemAccounts = await client.GetManagedAccounts("123");
+var systemAccounts = await _client.GetManagedAccounts("123");
 
 // Get a specific account by system ID and account name
-var specificAccount = await client.GetManagedAccounts("123", "admin");
+var specificAccount = await _client.GetManagedAccounts("123", "admin");
 // This returns a list with a single account if found
 ```
 
@@ -181,24 +195,11 @@ var specificAccount = await client.GetManagedAccounts("123", "admin");
 
 ```csharp
 // Get all managed systems
-var systems = await client.GetManagedSystems();
+var systems = await _client.GetManagedSystems();
 
 // Get a specific managed system by ID
-var specificSystem = await client.GetManagedSystems("123");
+var specificSystem = await _client.GetManagedSystems("123");
 // This returns a list with a single system if found
-```
-
-### Retrieving Passwords
-
-```csharp
-// Get password by account ID
-var password = await client.GetManagedAccountPasswordById("50");
-Console.WriteLine($"Password: {password.Password}");
-Console.WriteLine($"Request ID: {password.RequestId}");
-Console.WriteLine($"Expires: {password.ExpirationDate}");
-
-// Get password by account name and system name
-var password = await client.GetManagedAccountPasswordByName("admin", "DC01");
 ```
 
 ## Error Handling
@@ -213,7 +214,7 @@ Example:
 ```csharp
 try
 {
-    var password = await client.GetManagedAccountPasswordById("50");
+    var password = await _client.GetManagedAccountPasswordById("50");
 }
 catch (BeyondTrustApiException ex)
 {
