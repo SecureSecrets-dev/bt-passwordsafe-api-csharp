@@ -160,14 +160,18 @@ Console.WriteLine($"Request ID: {password.RequestId}");
 Console.WriteLine($"Expires: {password.ExpirationDate}");
 
 // Get password by account name and system name with a reason
-var passwordByName = await _client.GetManagedAccountPasswordByName("admin", "DC01", reason: "Support ticket #1234 - scheduled maintenance");
+var passwordByName = await _client.GetManagedAccountPasswordByName(
+  accountName: "admin", 
+  systemName: "DC01", 
+  reason: "Support ticket #1234 - scheduled maintenance"
+);
 Console.WriteLine($"Password: {passwordByName.Password}");
 Console.WriteLine($"Request ID: {passwordByName.RequestId}");
 Console.WriteLine($"Expires: {passwordByName.ExpirationDate}");
 
 // Get password by account name and domain name where isDomainLinked is true
 var passwordByDomain = await _client.GetManagedAccountPasswordByName(
-    "admin",
+    accountName: "admin",
     domainName: "domain.com",
     isDomainLinked: true,
     reason: "Support ticket #1234 - domain account access"
