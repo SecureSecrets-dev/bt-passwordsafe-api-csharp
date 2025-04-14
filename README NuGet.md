@@ -1,6 +1,6 @@
 # BT.PasswordSafe.API
 
-A .NET package for interacting with BeyondTrust Password Safe API. This package provides a simple and intuitive interface for retrieving passwords, managed accounts and managed systems from BeyondTrust Password Safe.
+A .NET package for interacting with BeyondTrust Password Safe API. This package provides a simple and intuitive interface for retrieving passwords, secrets, managed accounts and managed systems from BeyondTrust Password Safe.
 
 ## Features
 
@@ -12,6 +12,7 @@ A .NET package for interacting with BeyondTrust Password Safe API. This package 
 - 🧩 **Error Handling**: Gracefully handles API errors including 409 Conflict scenarios
 - 📝 **Detailed Logging**: Comprehensive logging for troubleshooting and auditing
 - 🛡️ **Type Safety**: Strongly-typed models for all API interactions
+- 🔒 **Secret Retrieval**: Get secrets by ID or name (title)
 
 ## Installation
 
