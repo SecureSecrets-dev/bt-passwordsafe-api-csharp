@@ -177,7 +177,7 @@ namespace BT.PasswordSafe.API
         }
 
         /// <inheritdoc />
-        public async Task<ManagedPassword> GetManagedAccountPasswordById(string managedAccountId, CancellationToken cancellationToken = default)
+        public async Task<ManagedPassword> GetManagedAccountPasswordById(string managedAccountId, string? reason = null, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(managedAccountId))
             {
@@ -199,7 +199,8 @@ namespace BT.PasswordSafe.API
                     SystemId = account.ManagedSystemId,
                     AccountId = account.ManagedAccountId,
                     DurationMinutes = _options.DefaultPasswordDuration,
-                    Reason = "API Password Request"
+                    Reason = reason,
+                    AccessType = "View"
                 };
 
                 // Request the password
@@ -318,13 +319,13 @@ namespace BT.PasswordSafe.API
         }
 
         /// <inheritdoc />
-        public async Task<ManagedPassword> GetManagedAccountPasswordByName(string accountName, string? systemName = null, string? domainName = null, bool isDomainLinked = false, CancellationToken cancellationToken = default)
+        public async Task<ManagedPassword> GetManagedAccountPasswordByName(string accountName, string? systemName = null, string? domainName = null, bool isDomainLinked = false, string? reason = null, CancellationToken cancellationToken = default)
         {
             // Get the managed account details first
             var account = await GetManagedAccountByName(accountName, systemName, domainName, isDomainLinked, cancellationToken).ConfigureAwait(false);
 
             // Now that we have the account ID, get the password
-            return await GetManagedAccountPasswordById(account.ManagedAccountId.ToString(), cancellationToken).ConfigureAwait(false);
+            return await GetManagedAccountPasswordById(account.ManagedAccountId.ToString(), reason, cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -738,7 +739,7 @@ namespace BT.PasswordSafe.API
         }
 
         /// <inheritdoc />
-        public async Task<ManagedPassword> GetManagedAccountPasswordByRequestId(string requestId, CancellationToken cancellationToken = default)
+        public async Task<ManagedPassword> GetManagedAccountPasswordByRequestId(string requestId, string? reason = null, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(requestId))
             {

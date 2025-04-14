@@ -11,8 +11,6 @@ A .NET package for interacting with BeyondTrust Password Safe API. This package 
 - 🔑 **Password Retrieval**: Get passwords with automatic request handling and conflict resolution
 - 🧩 **Error Handling**: Gracefully handles API errors including 409 Conflict scenarios
 - 📝 **Detailed Logging**: Comprehensive logging for troubleshooting and auditing
-- 🧰 **Dependency Injection**: Seamlessly integrates with Microsoft's dependency injection
-- ⚡ **Full Async Support**: Complete async/await pattern implementation for all operations
 - 🛡️ **Type Safety**: Strongly-typed models for all API interactions
 
 ## Installation
@@ -129,109 +127,8 @@ public class PasswordService
     }
 }
 ```
-
-### Authentication
-
-```csharp
-// Authenticate with the Password Safe API
-var authResult = await client.Authenticate();
-Console.WriteLine($"Token Type: {authResult.TokenType}");
-Console.WriteLine($"Expires In: {authResult.ExpiresIn} seconds");
-```
-
-The SDK supports two authentication methods:
-
-1. **PS-Auth Authentication**: Uses the API Key, RunAs Username, and RunAs Password
-2. **OAuth Authentication**: Uses Client ID and Client Secret for OAuth 2.0 authentication
-
-The authentication method is determined by the `UseOAuth` option. When set to `true`, OAuth authentication is used; otherwise, API key authentication is used.
-
-### Retrieving Passwords
-
-```csharp
-// Get password by account ID
-var password = await _client.GetManagedAccountPasswordById("50");
-Console.WriteLine($"Password: {password.Password}");
-Console.WriteLine($"Request ID: {password.RequestId}");
-Console.WriteLine($"Expires: {password.ExpirationDate}");
-
-// Get password by account name and system name
-var password = await _client.GetManagedAccountPasswordByName("admin", "DC01");
-```
-
-## Advanced Usage
-
-### Handling Existing Requests
-
-The SDK automatically handles cases where a password request already exists (409 Conflict). It will attempt to find and use the existing request instead of creating a new one.
-
-```csharp
-// This will work even if there's already an active request for this account
-var password = await _client.GetManagedAccountPasswordById("50");
-```
-
-### Checking In Passwords
-
-```csharp
-// Check in a password when you're done with it
-await _client.CheckInPassword(passwordResult.RequestId, "Task completed");
-```
-
-### Retrieving Managed Accounts
-
-```csharp
-// Get all managed accounts
-var accounts = await _client.GetManagedAccounts();
-
-// Get accounts for a specific system by system ID
-var systemAccounts = await _client.GetManagedAccounts("123");
-
-// Get a specific account by system ID and account name
-var specificAccount = await _client.GetManagedAccounts("123", "admin");
-// This returns a list with a single account if found
-```
-
-### Retrieving Managed Systems
-
-```csharp
-// Get all managed systems
-var systems = await _client.GetManagedSystems();
-
-// Get a specific managed system by ID
-var specificSystem = await _client.GetManagedSystems("123");
-// This returns a list with a single system if found
-```
-
-## Error Handling
-
-The SDK uses custom exceptions to provide detailed error information:
-
-- `BeyondTrustApiException`: General API errors
-- `BeyondTrustAuthenticationException`: Authentication-specific errors
-
-Example:
-
-```csharp
-try
-{
-    var password = await _client.GetManagedAccountPasswordById("50");
-}
-catch (BeyondTrustApiException ex)
-{
-    // Handle API errors
-    logger.LogError(ex, "Failed to retrieve password");
-}
-catch (BeyondTrustAuthenticationException ex)
-{
-    // Handle authentication errors
-    logger.LogError(ex, "Authentication failed");
-}
-```
+Refer to github repository for more details: https://github.com/keertipatip/bt-passwordsafe-api-csharp
 
 ## License
 
 This project is licensed under the MIT License.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.

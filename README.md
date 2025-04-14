@@ -14,8 +14,6 @@ A .NET package for interacting with BeyondTrust Password Safe API. This package 
 - 🔑 **Password Retrieval**: Get passwords with automatic request handling and conflict resolution
 - 🧩 **Error Handling**: Gracefully handles API errors including 409 Conflict scenarios
 - 📝 **Detailed Logging**: Comprehensive logging for troubleshooting and auditing
-- 🧰 **Dependency Injection**: Seamlessly integrates with Microsoft's dependency injection
-- ⚡ **Full Async Support**: Complete async/await pattern implementation for all operations
 - 🛡️ **Type Safety**: Strongly-typed models for all API interactions
 
 ## Installation
@@ -153,19 +151,23 @@ The authentication method is determined by the `UseOAuth` option. When set to `t
 ### Retrieving Passwords
 
 ```csharp
-// Get password by account ID
-var password = await _client.GetManagedAccountPasswordById("50");
+// Get password by account ID with a reason
+var password = await _client.GetManagedAccountPasswordById("50", reason: "Support ticket #1234 - scheduled maintenance");
 Console.WriteLine($"Password: {password.Password}");
 Console.WriteLine($"Request ID: {password.RequestId}");
 Console.WriteLine($"Expires: {password.ExpirationDate}");
 
-// Get password by account name and system name
-var password = await _client.GetManagedAccountPasswordByName("admin", "DC01");
+// Get password by account name and system name with a reason
+var passwordByName = await _client.GetManagedAccountPasswordByName("admin", "DC01", reason: "Support ticket #1234 - scheduled maintenance");
+Console.WriteLine($"Password: {passwordByName.Password}");
+Console.WriteLine($"Request ID: {passwordByName.RequestId}");
+Console.WriteLine($"Expires: {passwordByName.ExpirationDate}");
 
 // Get password by request ID (useful when you've already created a request)
-var requestId = "12345"; // Request ID from a previous CreatePasswordRequest call
-var password = await _client.GetManagedAccountPasswordByRequestId(requestId);
-Console.WriteLine($"Password: {password.Password}");
+var requestId = "12345"; // Request ID from a previous CreatePasswordRequest call or retrieval
+var passwordByRequestId = await _client.GetManagedAccountPasswordByRequestId(requestId, reason: "Support ticket #1234 - scheduled maintenance");
+Console.WriteLine($"Password: {passwordByRequestId.Password}");
+Console.WriteLine($"Expires: {passwordByRequestId.ExpirationDate}");
 ```
 
 ## Advanced Usage

@@ -22,9 +22,10 @@ namespace BT.PasswordSafe.API.Interfaces
         /// Gets a managed password by account ID
         /// </summary>
         /// <param name="managedAccountId">The ID of the managed account</param>
+        /// <param name="reason">Optional reason for retrieving the password</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Managed password</returns>
-        Task<ManagedPassword> GetManagedAccountPasswordById(string managedAccountId, CancellationToken cancellationToken = default);
+        Task<ManagedPassword> GetManagedAccountPasswordById(string managedAccountId, string? reason = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a managed password by account name
@@ -33,9 +34,10 @@ namespace BT.PasswordSafe.API.Interfaces
         /// <param name="systemName">Name of the managed system (required if isDomainLinked is false)</param>
         /// <param name="domainName">Name of the domain (required if isDomainLinked is true)</param>
         /// <param name="isDomainLinked">Whether the account is domain-linked (true) or local (false)</param>
+        /// <param name="reason">Optional reason for retrieving the password</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Managed password</returns>
-        Task<ManagedPassword> GetManagedAccountPasswordByName(string accountName, string? systemName = null, string? domainName = null, bool isDomainLinked = false, CancellationToken cancellationToken = default);
+        Task<ManagedPassword> GetManagedAccountPasswordByName(string accountName, string? systemName = null, string? domainName = null, bool isDomainLinked = false, string? reason = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a managed account by name
@@ -69,9 +71,10 @@ namespace BT.PasswordSafe.API.Interfaces
         /// Gets a managed password by request ID
         /// </summary>
         /// <param name="requestId">The ID of the password request</param>
+        /// <param name="reason">Optional reason for retrieving the password</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Managed password</returns>
-        Task<ManagedPassword> GetManagedAccountPasswordByRequestId(string requestId, CancellationToken cancellationToken = default);
+        Task<ManagedPassword> GetManagedAccountPasswordByRequestId(string requestId, string? reason = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Creates a password request
