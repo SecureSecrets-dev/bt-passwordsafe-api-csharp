@@ -165,8 +165,19 @@ Console.WriteLine($"Password: {passwordByName.Password}");
 Console.WriteLine($"Request ID: {passwordByName.RequestId}");
 Console.WriteLine($"Expires: {passwordByName.ExpirationDate}");
 
+// Get password by account name and domain name where isDomainLinked is true
+var passwordByDomain = await _client.GetManagedAccountPasswordByName(
+    "admin",
+    domainName: "domain.com",
+    isDomainLinked: true,
+    reason: "Support ticket #1234 - domain account access"
+);
+Console.WriteLine($"Password: {passwordByDomain.Password}");
+Console.WriteLine($"Request ID: {passwordByDomain.RequestId}");
+Console.WriteLine($"Expires: {passwordByDomain.ExpirationDate}");
+
 // Get password by request ID (useful when you've already created a request)
-var requestId = "12345"; // Request ID from a previous CreatePasswordRequest call or retrieval
+var requestId = "89"; // Request ID from a previous CreatePasswordRequest call or retrieval
 var passwordByRequestId = await _client.GetManagedAccountPasswordByRequestId(requestId, reason: "Support ticket #1234 - scheduled maintenance");
 Console.WriteLine($"Password: {passwordByRequestId.Password}");
 Console.WriteLine($"Expires: {passwordByRequestId.ExpirationDate}");
