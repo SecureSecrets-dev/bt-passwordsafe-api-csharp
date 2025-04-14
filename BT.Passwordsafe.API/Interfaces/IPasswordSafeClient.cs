@@ -66,6 +66,14 @@ namespace BT.PasswordSafe.API.Interfaces
         Task<IEnumerable<ManagedSystem>> GetManagedSystems(string? systemId = null, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Gets a managed password by request ID
+        /// </summary>
+        /// <param name="requestId">The ID of the password request</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Managed password</returns>
+        Task<ManagedPassword> GetManagedAccountPasswordByRequestId(string requestId, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Creates a password request
         /// </summary>
         /// <param name="request">The password request details</param>

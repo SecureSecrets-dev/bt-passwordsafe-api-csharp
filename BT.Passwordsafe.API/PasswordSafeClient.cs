@@ -738,6 +738,66 @@ namespace BT.PasswordSafe.API
         }
 
         /// <inheritdoc />
+        public async Task<ManagedPassword> GetManagedAccountPasswordByRequestId(string requestId, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(requestId))
+            {
+                throw new ArgumentException("Request ID cannot be null or empty", nameof(requestId));
+            }
+
+            await EnsureAuthenticated(cancellationToken).ConfigureAwait(false);
+
+            _logger?.LogInformation($"Retrieving managed account password by request ID: {requestId}");
+
+            // Get the password using the request ID
+            var response = await _httpClient.GetAsync($"Credentials/{requestId}", cancellationToken).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new BeyondTrustApiException($"Failed to get password with status code {response.StatusCode}");
+            }
+
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            ManagedPassword? password = null;
+
+            try
+            {
+                // First try to parse as a complex object
+                password = JsonConvert.DeserializeObject<ManagedPassword>(content);
+                if (password != null)
+                {
+                    // Set additional properties from the request
+                    password.RequestId = requestId;
+                    
+                    return password;
+                }
+            }
+            catch (JsonException)
+            {
+                // If complex object deserialization fails, try parsing as a simple password string
+                try
+                {
+                    // The API might just return the password as a plain string
+                    var rawPassword = content.Trim('"');
+                    password = new ManagedPassword
+                    {
+                        Password = rawPassword,
+                        RequestId = requestId
+                    };
+
+                    return password;
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Failed to parse password response");
+                    throw new BeyondTrustApiException("Failed to parse password response", ex);
+                }
+            }
+
+            throw new BeyondTrustApiException("Failed to retrieve password");
+        }
+
+        /// <inheritdoc />
         public async Task<bool> CheckInPassword(string requestId, string? reason = null, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(requestId))

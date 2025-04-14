@@ -161,6 +161,11 @@ Console.WriteLine($"Expires: {password.ExpirationDate}");
 
 // Get password by account name and system name
 var password = await _client.GetManagedAccountPasswordByName("admin", "DC01");
+
+// Get password by request ID (useful when you've already created a request)
+var requestId = "12345"; // Request ID from a previous CreatePasswordRequest call
+var password = await _client.GetManagedAccountPasswordByRequestId(requestId);
+Console.WriteLine($"Password: {password.Password}");
 ```
 
 ## Advanced Usage

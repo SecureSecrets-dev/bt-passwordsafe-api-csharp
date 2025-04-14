@@ -104,6 +104,23 @@ namespace BT.PasswordSafe.API.TestApp
                         Console.WriteLine($"Request ID: {password.RequestId}");
                         Console.WriteLine($"Expires: {password.ExpirationDate}");
 
+                        // Test GetManagedAccountPasswordByRequestId
+                        if (!string.IsNullOrEmpty(password.RequestId))
+                        {
+                            Console.WriteLine($"\nTesting GetManagedAccountPasswordByRequestId with request ID: {password.RequestId}...");
+                            var passwordByRequestId = await client.GetManagedAccountPasswordByRequestId(password.RequestId);
+                            Console.WriteLine($"Retrieved password using request ID {password.RequestId}");
+                            
+                            if (!string.IsNullOrEmpty(passwordByRequestId.Password))
+                            {
+                                Console.WriteLine($"Password: {passwordByRequestId.Password.Substring(0, 1)}*****");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Password: [Empty]");
+                            }
+                        }
+
                         // Test checking in the password
                         // Add null check for password.RequestId
                         if (!string.IsNullOrEmpty(password.RequestId))
