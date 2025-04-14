@@ -15,6 +15,7 @@ A .NET package for interacting with BeyondTrust Password Safe API. This package 
 - 🧩 **Error Handling**: Gracefully handles API errors including 409 Conflict scenarios
 - 📝 **Detailed Logging**: Comprehensive logging for troubleshooting and auditing
 - 🛡️ **Type Safety**: Strongly-typed models for all API interactions
+- 🔒 **Secret Retrieval**: Get secrets by ID or name (title)
 
 ## Installation
 
@@ -187,6 +188,26 @@ Console.WriteLine($"Password: {passwordByRequestId.Password}");
 Console.WriteLine($"Expires: {passwordByRequestId.ExpirationDate}");
 ```
 
+### Retrieving Secrets
+
+```csharp
+// Get a secret by ID (GUID)
+var secret = await client.GetSecretById(Guid.Parse("YOUR-SECRET-GUID-HERE"));
+if (secret != null)
+{
+    Console.WriteLine($"Secret Title: {secret.Title}");
+    Console.WriteLine($"Secret Password: {secret.Password}");
+}
+
+// Get a secret by name (title)
+var secretByName = await client.GetSecretByName("My Secret Title");
+if (secretByName != null)
+{
+    Console.WriteLine($"Secret ID: {secretByName.Id}");
+    Console.WriteLine($"Secret Password: {secretByName.Password}");
+}
+```
+
 ## Advanced Usage
 
 ### Handling Existing Requests
@@ -262,7 +283,9 @@ The solution includes a test application (`BT.PasswordSafe.API.TestApp`) that de
        "SystemId": "123",
        "AccountId": "50",
        "AccountName": "admin",
-       "SystemName": "YourSystem"
+       "SystemName": "YourSystem",
+       "SecretId": "your-secret-guid",
+       "SecretName": "your-secret-title"
      }
      ```
 
@@ -283,9 +306,11 @@ The test application demonstrates all the key features of the SDK:
 
 - Authentication (both API Key and OAuth)
 - Retrieving managed systems (all systems and by ID)
-- Retrieving managed accounts (all accounts, by system, by ID, by name)
-- Password retrieval and management
-- Error handling and logging
+- Retrieving managed accounts (all accounts, by ID, by name)
+- Retrieving passwords by account ID, name, or request ID
+- Checking in passwords
+- Creating password requests
+- Retrieving Secrets by ID and by name (title)
 
 ## Error Handling
 

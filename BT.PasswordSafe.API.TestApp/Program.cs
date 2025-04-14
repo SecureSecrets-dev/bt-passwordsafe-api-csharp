@@ -230,6 +230,43 @@ namespace BT.PasswordSafe.API.TestApp
                     }
                 }
 
+                // Test getting a secret by ID (example GUID, replace with a real one for your environment)
+                var exampleSecretId = Guid.Empty;
+                var secretIdSetting = testSettings["SecretId"];
+                if (!string.IsNullOrEmpty(secretIdSetting) && Guid.TryParse(secretIdSetting, out var parsedSecretId))
+                {
+                    exampleSecretId = parsedSecretId;
+                }
+                if (exampleSecretId != Guid.Empty)
+                {
+                    Console.WriteLine($"\nTesting GetSecretById with ID: {exampleSecretId}...");
+                    var secretById = await client.GetSecretById(exampleSecretId);
+                    if (secretById != null)
+                    {
+                        Console.WriteLine($"Found secret: {secretById.Title} (ID: {secretById.Id})");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Secret with ID {exampleSecretId} not found");
+                    }
+                }
+
+                // Test getting a secret by name (title)
+                var secretName = testSettings["SecretName"];
+                if (!string.IsNullOrEmpty(secretName))
+                {
+                    Console.WriteLine($"\nTesting GetSecretByName with name: {secretName}...");
+                    var secretByName = await client.GetSecretByName(secretName);
+                    if (secretByName != null)
+                    {
+                        Console.WriteLine($"Found secret: {secretByName.Title} (ID: {secretByName.Id}) (Password: {secretByName.Password})");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Secret with name '{secretName}' not found");
+                    }
+                }
+
                 // Sign out
                 Console.WriteLine("\nTesting SignOut...");
                 var signOutResult = await client.SignOut();

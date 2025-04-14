@@ -873,6 +873,43 @@ namespace BT.PasswordSafe.API
         }
 
         /// <summary>
+        /// Gets a secret by its ID.
+        /// </summary>
+        /// <param name="secretId">The ID of the secret</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>The secret if found, otherwise null</returns>
+        public async Task<SecretSafe?> GetSecretById(Guid secretId, CancellationToken cancellationToken = default)
+        {
+            await EnsureAuthenticated(cancellationToken).ConfigureAwait(false);
+            _logger?.LogInformation($"Retrieving secret by ID: {secretId}");
+            var response = await _httpClient.GetAsync($"Secrets-Safe/Secrets/{secretId}", cancellationToken).ConfigureAwait(false);
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return null;
+            if (!response.IsSuccessStatusCode)
+                throw new BeyondTrustApiException($"Failed to retrieve secret by ID with status code {response.StatusCode}");
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return JsonConvert.DeserializeObject<SecretSafe>(content);
+        }
+
+        /// <summary>
+        /// Gets a secret by its name (title).
+        /// </summary>
+        /// <param name="name">The title of the secret</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>The secret if found, otherwise null</returns>
+        public async Task<SecretSafe?> GetSecretByName(string name, CancellationToken cancellationToken = default)
+        {
+            await EnsureAuthenticated(cancellationToken).ConfigureAwait(false);
+            _logger?.LogInformation($"Retrieving secret by name: {name}");
+            var response = await _httpClient.GetAsync($"Secrets-Safe/Secrets?Title={Uri.EscapeDataString(name)}", cancellationToken).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+                throw new BeyondTrustApiException($"Failed to retrieve secret by name with status code {response.StatusCode}");
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var secrets = JsonConvert.DeserializeObject<List<SecretSafe>>(content);
+            return secrets?.Count > 0 ? secrets[0] : null;
+        }
+
+        /// <summary>
         /// Disposes the client resources
         /// </summary>
         public void Dispose()

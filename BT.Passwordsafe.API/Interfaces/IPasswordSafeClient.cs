@@ -99,5 +99,21 @@ namespace BT.PasswordSafe.API.Interfaces
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>True if successful</returns>
         Task<bool> SignOut(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets a secret by its ID
+        /// </summary>
+        /// <param name="secretId">The ID of the secret</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>The secret if found, otherwise null</returns>
+        Task<SecretSafe?> GetSecretById(Guid secretId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets a secret by its name (title)
+        /// </summary>
+        /// <param name="name">The title of the secret</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>The secret if found, otherwise null</returns>
+        Task<SecretSafe?> GetSecretByName(string name, CancellationToken cancellationToken = default);
     }
 }
