@@ -192,7 +192,7 @@ Console.WriteLine($"Expires: {passwordByRequestId.ExpirationDate}");
 
 ```csharp
 // Get a secret by ID (GUID)
-var secret = await client.GetSecretById(Guid.Parse("YOUR-SECRET-GUID-HERE"));
+var secret = await client.GetSecretById(Guid.Parse("My Secret GUID));
 if (secret != null)
 {
     Console.WriteLine($"Secret Title: {secret.Title}");
