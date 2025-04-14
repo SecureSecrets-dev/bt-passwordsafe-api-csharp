@@ -39,7 +39,7 @@ var services = new ServiceCollection();
 // Add the PasswordSafe client
 services.AddPasswordSafeClient(options =>
 {
-    options.BaseUrl = "https://your-instance.beyondtrustcloud.com/BeyondTrust/api/public/v3/";
+    options.BaseUrl = "https://your-instance.ps.beyondtrustcloud.com/BeyondTrust/api/public/v3/";
     //options.BaseUrl = "https://your-instance/BeyondTrust/api/public/v3/";
     
     // API Key Authentication
@@ -80,12 +80,14 @@ In your `appsettings.json`:
 ```json
 {
   "PasswordSafe": {
-    "BaseUrl": "https://your-instance.beyondtrustcloud.com/BeyondTrust/api/public/v3/",
+    "BaseUrl": "https://your-instance.ps.beyondtrustcloud.com/BeyondTrust/api/public/v3/",
     //"BaseUrl": "https://your-instance/BeyondTrust/api/public/v3/",
     "ApiKey": "your-api-key",
     "RunAsUsername": "your-username",
     "RunAsPassword": "your-password",
     "UseOAuth": false,
+    "OAuthClientId": "your-client-id",
+    "OAuthClientSecret": "your-client-secret",
     "TimeoutSeconds": 30,
     "DefaultPasswordDuration": 60,
     "AutoRefreshToken": true
