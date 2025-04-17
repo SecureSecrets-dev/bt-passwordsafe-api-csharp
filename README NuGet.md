@@ -2,18 +2,6 @@
 
 A .NET package for interacting with BeyondTrust Password Safe API. This package provides a simple and intuitive interface for retrieving passwords, secrets, managed accounts and managed systems from BeyondTrust Password Safe.
 
-## Features
-
-- 🔐 **Authentication**: Support for both API Key and OAuth authentication methods
-- 🔄 **Token Management**: Handles token refresh and expiration automatically
-- 🔍 **Managed Accounts**: Find and manage accounts by ID, name, or system
-- 🔎 **Managed Systems**: Retrieve managed systems by ID or get a complete list
-- 🔑 **Password Retrieval**: Get passwords with automatic request handling and conflict resolution
-- 🧩 **Error Handling**: Gracefully handles API errors including 409 Conflict scenarios
-- 📝 **Detailed Logging**: Comprehensive logging for troubleshooting and auditing
-- 🛡️ **Type Safety**: Strongly-typed models for all API interactions
-- 🔒 **Secret Retrieval**: Get secrets by ID or name (title)
-
 ## Installation
 
 ```bash

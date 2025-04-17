@@ -5,17 +5,22 @@ A .NET package for interacting with BeyondTrust Password Safe API. This package 
 [![NuGet](https://img.shields.io/nuget/v/BT.PasswordSafe.API.svg)](https://www.nuget.org/packages/BT.PasswordSafe.API/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+## Available Methods
 
-- 🔐 **Authentication**: Support for both API Key and OAuth authentication methods
-- 🔄 **Token Management**: Handles token refresh and expiration automatically
-- 🔍 **Managed Accounts**: Find and manage accounts by ID, name, or system
-- 🔎 **Managed Systems**: Retrieve managed systems by ID or get a complete list
-- 🔑 **Password Retrieval**: Get passwords with automatic request handling and conflict resolution
-- 🧩 **Error Handling**: Gracefully handles API errors including 409 Conflict scenarios
-- 📝 **Detailed Logging**: Comprehensive logging for troubleshooting and auditing
-- 🛡️ **Type Safety**: Strongly-typed models for all API interactions
-- 🔒 **Secret Retrieval**: Get secrets by ID or name (title)
+| Method | Description |
+|--------|-------------|
+| `Authenticate` | Authenticates with the Password Safe API |
+| `GetManagedAccountPasswordById` | Gets a managed password by account ID |
+| `GetManagedAccountPasswordByName` | Gets a managed password by account name |
+| `GetManagedAccountByName` | Gets a managed account by name |
+| `GetManagedAccounts` | Gets a list of managed accounts |
+| `GetManagedSystems` | Gets a list of managed systems |
+| `CreatePasswordRequest` | Creates a password request |
+| `GetManagedAccountPasswordByRequestId` | Gets a managed password by request ID |
+| `CheckInPassword` | Checks in a password that was previously checked out |
+| `SignOut` | Signs out the current user session |
+| `GetSecretById` | Gets a secret by its ID |
+| `GetSecretByName` | Gets a secret by its name (title) |
 
 ## Installation
 
