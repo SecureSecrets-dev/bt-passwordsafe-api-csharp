@@ -21,6 +21,10 @@ A .NET package for interacting with BeyondTrust Password Safe API. This package 
 | `SignOut` | Signs out the current user session |
 | `GetSecretById` | Gets a secret by its ID |
 | `GetSecretByName` | Gets a secret by its name (title) |
+| `TestCredentialByAccountID` | Tests the current credentials of a managed account by ID |
+| `TestCredentialByAccountName` | Tests the current credentials of a managed account by name |
+| `ChangeCredentialByAccountID` | Changes the current credentials of a managed account by ID |
+| `ChangeCredentialByAccountName` | Changes the current credentials of a managed account by name |
 
 ## Installation
 
@@ -191,6 +195,42 @@ var requestId = "89"; // Request ID from a previous CreatePasswordRequest call o
 var passwordByRequestId = await _client.GetManagedAccountPasswordByRequestId(requestId, reason: "Support ticket #1234 - scheduled maintenance");
 Console.WriteLine($"Password: {passwordByRequestId.Password}");
 Console.WriteLine($"Expires: {passwordByRequestId.ExpirationDate}");
+```
+
+### Testing and Changing Credentials
+
+```csharp
+// Test credentials by account ID
+var testResult = await _client.TestCredentialByAccountID("50");
+Console.WriteLine($"Credential test result: {(testResult ? "Success" : "Failed")}");
+
+// Test credentials by account name
+var testByNameResult = await _client.TestCredentialByAccountName(
+    accountName: "admin", 
+    systemName: "DC01"
+);
+Console.WriteLine($"Credential test by name result: {(testByNameResult ? "Success" : "Failed")}");
+
+// Change credentials by account ID
+// Set queue=true to process in background, false for immediate change
+await _client.ChangeCredentialByAccountID("50", queue: true);
+Console.WriteLine("Credential change queued successfully");
+
+// Change credentials by account name
+await _client.ChangeCredentialByAccountName(
+    accountName: "admin", 
+    systemName: "DC01",
+    queue: true
+);
+Console.WriteLine("Credential change by name queued successfully");
+
+// For domain accounts, use the isDomainLinked parameter
+var testDomainResult = await _client.TestCredentialByAccountName(
+    accountName: "admin",
+    domainName: "domain.com",
+    isDomainLinked: true
+);
+Console.WriteLine($"Domain account credential test result: {(testDomainResult ? "Success" : "Failed")}");
 ```
 
 ### Retrieving Secrets
