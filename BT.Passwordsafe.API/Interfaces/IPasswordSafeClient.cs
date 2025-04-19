@@ -115,5 +115,45 @@ namespace BT.PasswordSafe.API.Interfaces
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>The secret if found, otherwise null</returns>
         Task<SecretSafe?> GetSecretByName(string name, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Tests the current credentials of a managed account by ID
+        /// </summary>
+        /// <param name="managedAccountId">ID of the managed account</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>True if the credential test succeeded, otherwise false</returns>
+        Task<bool> TestCredentialByAccountID(string managedAccountId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Tests the current credentials of a managed account by name
+        /// </summary>
+        /// <param name="accountName">Name of the managed account</param>
+        /// <param name="systemName">Name of the managed system (required if isDomainLinked is false)</param>
+        /// <param name="domainName">Name of the domain (required if isDomainLinked is true)</param>
+        /// <param name="isDomainLinked">Whether the account is domain-linked (true) or local (false)</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>True if the credential test succeeded, otherwise false</returns>
+        Task<bool> TestCredentialByAccountName(string accountName, string? systemName = null, string? domainName = null, bool isDomainLinked = false, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Changes the current credentials of a managed account by ID
+        /// </summary>
+        /// <param name="managedAccountId">ID of the managed account</param>
+        /// <param name="queue">True to queue the change for background processing, otherwise false</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Task representing the asynchronous operation</returns>
+        Task ChangeCredentialByAccountID(string managedAccountId, bool queue = false, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Changes the current credentials of a managed account by name
+        /// </summary>
+        /// <param name="accountName">Name of the managed account</param>
+        /// <param name="systemName">Name of the managed system (required if isDomainLinked is false)</param>
+        /// <param name="domainName">Name of the domain (required if isDomainLinked is true)</param>
+        /// <param name="isDomainLinked">Whether the account is domain-linked (true) or local (false)</param>
+        /// <param name="queue">True to queue the change for background processing, otherwise false</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Task representing the asynchronous operation</returns>
+        Task ChangeCredentialByAccountName(string accountName, string? systemName = null, string? domainName = null, bool isDomainLinked = false, bool queue = false, CancellationToken cancellationToken = default);
     }
 }

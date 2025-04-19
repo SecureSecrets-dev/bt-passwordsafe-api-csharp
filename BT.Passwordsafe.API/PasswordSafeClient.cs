@@ -910,6 +910,114 @@ namespace BT.PasswordSafe.API
         }
 
         /// <summary>
+        /// Tests the current credentials of a managed account by ID.
+        /// </summary>
+        /// <param name="managedAccountId">ID of the managed account</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>True if the credential test succeeded, otherwise false</returns>
+        public async Task<bool> TestCredentialByAccountID(string managedAccountId, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(managedAccountId))
+            {
+                throw new ArgumentException("Managed account ID cannot be null or empty", nameof(managedAccountId));
+            }
+
+            await EnsureAuthenticated(cancellationToken).ConfigureAwait(false);
+
+            _logger?.LogInformation($"Testing credentials for managed account ID: {managedAccountId}");
+
+            var response = await _httpClient.PostAsync($"ManagedAccounts/{managedAccountId}/Credentials/Test", null, cancellationToken).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new BeyondTrustApiException($"Failed to test credentials with status code {response.StatusCode}");
+            }
+
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var result = JsonConvert.DeserializeObject<CredentialTestResult>(content);
+
+            if (result == null)
+            {
+                throw new BeyondTrustApiException("Failed to deserialize credential test response");
+            }
+
+            return result.Success;
+        }
+
+        /// <summary>
+        /// Tests the current credentials of a managed account by name.
+        /// </summary>
+        /// <param name="accountName">Name of the managed account</param>
+        /// <param name="systemName">Name of the managed system (required if isDomainLinked is false)</param>
+        /// <param name="domainName">Name of the domain (required if isDomainLinked is true)</param>
+        /// <param name="isDomainLinked">Whether the account is domain-linked (true) or local (false)</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>True if the credential test succeeded, otherwise false</returns>
+        public async Task<bool> TestCredentialByAccountName(string accountName, string? systemName = null, string? domainName = null, bool isDomainLinked = false, CancellationToken cancellationToken = default)
+        {
+            // Get the managed account details first
+            var account = await GetManagedAccountByName(accountName, systemName, domainName, isDomainLinked, cancellationToken).ConfigureAwait(false);
+
+            // Now that we have the account ID, test the credentials
+            return await TestCredentialByAccountID(account.ManagedAccountId.ToString(), cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Changes the current credentials of a managed account by ID.
+        /// </summary>
+        /// <param name="managedAccountId">ID of the managed account</param>
+        /// <param name="queue">True to queue the change for background processing, otherwise false</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Task representing the asynchronous operation</returns>
+        public async Task ChangeCredentialByAccountID(string managedAccountId, bool queue = false, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(managedAccountId))
+            {
+                throw new ArgumentException("Managed account ID cannot be null or empty", nameof(managedAccountId));
+            }
+
+            await EnsureAuthenticated(cancellationToken).ConfigureAwait(false);
+
+            _logger?.LogInformation($"Changing credentials for managed account ID: {managedAccountId}");
+
+            // Create request body if queue parameter is provided
+            HttpContent? content = null;
+            if (queue)
+            {
+                var requestBody = new { Queue = true };
+                content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");
+            }
+
+            var response = await _httpClient.PostAsync($"ManagedAccounts/{managedAccountId}/Credentials/Change", content, cancellationToken).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new BeyondTrustApiException($"Failed to change credentials with status code {response.StatusCode}");
+            }
+
+            // No content in response body for successful request
+        }
+
+        /// <summary>
+        /// Changes the current credentials of a managed account by name.
+        /// </summary>
+        /// <param name="accountName">Name of the managed account</param>
+        /// <param name="systemName">Name of the managed system (required if isDomainLinked is false)</param>
+        /// <param name="domainName">Name of the domain (required if isDomainLinked is true)</param>
+        /// <param name="isDomainLinked">Whether the account is domain-linked (true) or local (false)</param>
+        /// <param name="queue">True to queue the change for background processing, otherwise false</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Task representing the asynchronous operation</returns>
+        public async Task ChangeCredentialByAccountName(string accountName, string? systemName = null, string? domainName = null, bool isDomainLinked = false, bool queue = false, CancellationToken cancellationToken = default)
+        {
+            // Get the managed account details first
+            var account = await GetManagedAccountByName(accountName, systemName, domainName, isDomainLinked, cancellationToken).ConfigureAwait(false);
+
+            // Now that we have the account ID, change the credentials
+            await ChangeCredentialByAccountID(account.ManagedAccountId.ToString(), queue, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Disposes the client resources
         /// </summary>
         public void Dispose()

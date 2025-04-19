@@ -271,6 +271,69 @@ namespace BT.PasswordSafe.API.TestApp
                 Console.WriteLine("\nTesting SignOut...");
                 var signOutResult = await client.SignOut();
                 Console.WriteLine($"Sign-out result: {(signOutResult ? "Success" : "Failed")}");
+
+                // Test the new credential testing and changing methods
+                if (!string.IsNullOrEmpty(accountId))
+                {
+                    try
+                    {
+                        // Test TestCredentialByAccountID
+                        Console.WriteLine($"\nTesting TestCredentialByAccountID with ID: {accountId}...");
+                        var testCredentialResult = await client.TestCredentialByAccountID(accountId);
+                        Console.WriteLine($"Test credential result: {(testCredentialResult ? "Success" : "Failed")}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error testing credentials by ID: {ex.Message}");
+                    }
+                }
+
+                // Test TestCredentialByAccountName
+                if (!string.IsNullOrEmpty(accountName) && !string.IsNullOrEmpty(systemName))
+                {
+                    try
+                    {
+                        Console.WriteLine($"\nTesting TestCredentialByAccountName with name: {accountName} on system: {systemName}...");
+                        var testCredentialByNameResult = await client.TestCredentialByAccountName(accountName, systemName);
+                        Console.WriteLine($"Test credential by name result: {(testCredentialByNameResult ? "Success" : "Failed")}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error testing credentials by name: {ex.Message}");
+                    }
+                }
+
+                // Test ChangeCredentialByAccountID
+                if (!string.IsNullOrEmpty(accountId))
+                {
+                    try
+                    {
+                        Console.WriteLine($"\nTesting ChangeCredentialByAccountID with ID: {accountId}...");
+                        Console.WriteLine("This will queue the credential change to run in the background.");
+                        await client.ChangeCredentialByAccountID(accountId, true);
+                        Console.WriteLine("Credential change queued successfully");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error changing credentials by ID: {ex.Message}");
+                    }
+                }
+
+                // Test ChangeCredentialByAccountName
+                if (!string.IsNullOrEmpty(accountName) && !string.IsNullOrEmpty(systemName))
+                {
+                    try
+                    {
+                        Console.WriteLine($"\nTesting ChangeCredentialByAccountName with name: {accountName} on system: {systemName}...");
+                        Console.WriteLine("This will queue the credential change to run in the background.");
+                        await client.ChangeCredentialByAccountName(accountName, systemName, null, false, true);
+                        Console.WriteLine("Credential change queued successfully");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error changing credentials by name: {ex.Message}");
+                    }
+                }
             }
             catch (Exception ex)
             {
