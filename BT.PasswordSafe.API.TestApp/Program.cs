@@ -267,27 +267,6 @@ namespace BT.PasswordSafe.API.TestApp
                     }
                 }
 
-                // Sign out
-                Console.WriteLine("\nTesting SignOut...");
-                var signOutResult = await client.SignOut();
-                Console.WriteLine($"Sign-out result: {(signOutResult ? "Success" : "Failed")}");
-
-                // Test the new credential testing and changing methods
-                if (!string.IsNullOrEmpty(accountId))
-                {
-                    try
-                    {
-                        // Test TestCredentialByAccountID
-                        Console.WriteLine($"\nTesting TestCredentialByAccountID with ID: {accountId}...");
-                        var testCredentialResult = await client.TestCredentialByAccountID(accountId);
-                        Console.WriteLine($"Test credential result: {(testCredentialResult ? "Success" : "Failed")}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error testing credentials by ID: {ex.Message}");
-                    }
-                }
-
                 // Test TestCredentialByAccountName
                 if (!string.IsNullOrEmpty(accountName) && !string.IsNullOrEmpty(systemName))
                 {
@@ -332,6 +311,28 @@ namespace BT.PasswordSafe.API.TestApp
                     catch (Exception ex)
                     {
                         Console.WriteLine($"Error changing credentials by name: {ex.Message}");
+                    }
+                }
+
+                
+                // Sign out
+                Console.WriteLine("\nTesting SignOut...");
+                var signOutResult = await client.SignOut();
+                Console.WriteLine($"Sign-out result: {(signOutResult ? "Success" : "Failed")}");
+
+                // Test the new credential testing and changing methods
+                if (!string.IsNullOrEmpty(accountId))
+                {
+                    try
+                    {
+                        // Test TestCredentialByAccountID
+                        Console.WriteLine($"\nTesting TestCredentialByAccountID with ID: {accountId}...");
+                        var testCredentialResult = await client.TestCredentialByAccountID(accountId);
+                        Console.WriteLine($"Test credential result: {(testCredentialResult ? "Success" : "Failed")}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error testing credentials by ID: {ex.Message}");
                     }
                 }
             }
