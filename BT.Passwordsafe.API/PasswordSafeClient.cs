@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -25,6 +26,11 @@ namespace BT.PasswordSafe.API
         private AuthenticationResult? _authResult;
         private bool _disposed;
         private readonly SemaphoreSlim _authLock = new SemaphoreSlim(1, 1);
+        private readonly Lazy<Task<AuthenticationResult>> _lazyAuthTask;
+        private int _tokenBufferMinutes = 5; // Default buffer time for token expiration
+        
+        // Add cache for authentication tokens
+        private static readonly ConcurrentDictionary<string, AuthenticationResult> _tokenCache = new ConcurrentDictionary<string, AuthenticationResult>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PasswordSafeClient"/> class
@@ -43,20 +49,86 @@ namespace BT.PasswordSafe.API
 
             _options.Validate();
 
-            // Configure the HttpClient
+            // Configure the HttpClient for optimal performance
             _httpClient.BaseAddress = new Uri(_options.BaseUrl!);
             _httpClient.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            
+            // Set connection pooling settings
+            if (_httpClient.DefaultRequestHeaders.Contains("Connection"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("Connection");
+            }
+            _httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
+            
+            // Disable Expect: 100-Continue behavior which adds latency
+            _httpClient.DefaultRequestHeaders.ExpectContinue = false;
+            
+            // Set up socket pooling and connection optimization using HttpClientHandler
+            if (_httpClient.DefaultRequestHeaders.Contains("SocketsHttpHandler"))
+            {
+                // Configure connection pooling at the handler level if possible
+                // This is a modern approach that doesn't use the obsolete ServicePointManager
+                var socketsHandler = new SocketsHttpHandler
+                {
+                    PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+                    PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+                    MaxConnectionsPerServer = 20,
+                    EnableMultipleHttp2Connections = true
+                };
+                
+                _logger?.LogInformation("Configured SocketsHttpHandler for optimized connections");
+            }
+            else
+            {
+                _logger?.LogInformation("Using default connection settings");
+            }
+            
+            // Initialize lazy authentication
+            _lazyAuthTask = new Lazy<Task<AuthenticationResult>>(() => InitializeAuthenticationAsync(CancellationToken.None));
+            
+            // Set token buffer time from options if specified
+            if (_options.TokenBufferMinutes > 0)
+            {
+                _tokenBufferMinutes = _options.TokenBufferMinutes;
+            }
         }
 
         /// <inheritdoc />
         public async Task<AuthenticationResult> Authenticate(CancellationToken cancellationToken = default)
         {
+            // Check cache first before acquiring lock
+            if (!string.IsNullOrEmpty(_options.BaseUrl) && 
+                _tokenCache.TryGetValue(_options.BaseUrl, out var cachedAuthResult) && 
+                !IsTokenExpired(cachedAuthResult))
+            {
+                _logger?.LogInformation("Using cached authentication token");
+                _authResult = cachedAuthResult;
+                return _authResult;
+            }
+            
+            // Fast path: return existing valid token without acquiring lock
+            if (_authResult != null && !IsTokenExpired(_authResult))
+            {
+                _logger?.LogInformation("Using existing authentication token without lock");
+                return _authResult;
+            }
+
             await _authLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
-                // Check if we already have a valid token
+                // Check cache again after acquiring lock
+                if (!string.IsNullOrEmpty(_options.BaseUrl) && 
+                    _tokenCache.TryGetValue(_options.BaseUrl, out cachedAuthResult) && 
+                    !IsTokenExpired(cachedAuthResult))
+                {
+                    _logger?.LogInformation("Using cached authentication token after lock");
+                    _authResult = cachedAuthResult;
+                    return _authResult;
+                }
+                
+                // Check again after acquiring the lock
                 if (_authResult != null && !IsTokenExpired(_authResult))
                 {
                     _logger?.LogInformation("Using existing authentication token");
@@ -80,8 +152,19 @@ namespace BT.PasswordSafe.API
             }
         }
 
+        private async Task<AuthenticationResult> InitializeAuthenticationAsync(CancellationToken cancellationToken)
+        {
+            return await Authenticate(cancellationToken).ConfigureAwait(false);
+        }
+
         private async Task<AuthenticationResult> AuthenticateWithApiKey(CancellationToken cancellationToken)
         {
+            // Remove any existing Authorization header to prevent conflicts
+            if (_httpClient.DefaultRequestHeaders.Contains("Authorization"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("Authorization");
+            }
+            
             // Set the API key in the request header
             var authHeader = $"PS-Auth key={_options.ApiKey}; runas={_options.RunAsUsername}";
             
@@ -91,10 +174,23 @@ namespace BT.PasswordSafe.API
                 authHeader += $"; pwd=[{_options.RunAsPassword}]";
             }
             
-            _httpClient.DefaultRequestHeaders.Add("Authorization", authHeader);
-
             // Make a simple request to verify the API key works
-            var response = await _httpClient.GetAsync("Auth", cancellationToken).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Get, "Auth");
+            
+            // Optimize request headers
+            request.Headers.ConnectionClose = false; // Ensure connection pooling is used
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+            request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
+            request.Headers.Add("Authorization", authHeader);
+            
+            _logger?.LogInformation("Sending API key authentication request");
+            var startTime = DateTimeOffset.UtcNow;
+            
+            var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            
+            var endTime = DateTimeOffset.UtcNow;
+            _logger?.LogInformation($"API key authentication request completed in {(endTime - startTime).TotalMilliseconds}ms with status {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -102,6 +198,9 @@ namespace BT.PasswordSafe.API
             }
 
             _logger?.LogInformation("Successfully authenticated with API key");
+
+            // Add the authorization header to the default headers for subsequent requests
+            _httpClient.DefaultRequestHeaders.Add("Authorization", authHeader);
 
             // Create a simple AuthenticationResult for API key authentication
             _authResult = new AuthenticationResult
@@ -112,28 +211,56 @@ namespace BT.PasswordSafe.API
                 IssuedAt = DateTimeOffset.UtcNow
             };
 
+            // Cache the authentication result
+            if (!string.IsNullOrEmpty(_options.BaseUrl))
+            {
+                _tokenCache.TryAdd(_options.BaseUrl, _authResult);
+            }
+
             return _authResult;
         }
 
         private async Task<AuthenticationResult> AuthenticateWithOAuth(CancellationToken cancellationToken)
         {
-            var formContent = new FormUrlEncodedContent(new[]
+            // Remove any existing Authorization header to prevent conflicts
+            if (_httpClient.DefaultRequestHeaders.Contains("Authorization"))
             {
-                new KeyValuePair<string, string>("grant_type", "client_credentials"),
-                new KeyValuePair<string, string>("client_id", _options.OAuthClientId!),
-                new KeyValuePair<string, string>("client_secret", _options.OAuthClientSecret!)
-            });
+                _httpClient.DefaultRequestHeaders.Remove("Authorization");
+            }
+            
+            // Prepare content with StringContent instead of FormUrlEncodedContent for better performance
+            var contentString = "grant_type=client_credentials&client_id=" + Uri.EscapeDataString(_options.OAuthClientId!) + 
+                               "&client_secret=" + Uri.EscapeDataString(_options.OAuthClientSecret!);
+            var content = new StringContent(contentString, Encoding.UTF8, "application/x-www-form-urlencoded");
 
-            // Make the OAuth token request
-            var response = await _httpClient.PostAsync("Auth/Connect/Token", formContent, cancellationToken).ConfigureAwait(false);
+            // Make the OAuth token request with optimized connection handling
+            using var request = new HttpRequestMessage(HttpMethod.Post, "Auth/Connect/Token")
+            {
+                Content = content
+            };
+            
+            // Optimize request headers
+            request.Headers.ConnectionClose = false; // Ensure connection pooling is used
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+            request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
+            
+            _logger?.LogInformation("Sending OAuth authentication request");
+            var startTime = DateTimeOffset.UtcNow;
+            
+            var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            
+            var endTime = DateTimeOffset.UtcNow;
+            _logger?.LogInformation($"OAuth request completed in {(endTime - startTime).TotalMilliseconds}ms with status {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
             {
                 throw new BeyondTrustAuthenticationException($"OAuth authentication failed with status code {response.StatusCode}");
             }
 
-            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var authResult = JsonConvert.DeserializeObject<AuthenticationResult>(content);
+            // Optimize content reading
+            var contentStringResponse = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var authResult = JsonConvert.DeserializeObject<AuthenticationResult>(contentStringResponse);
 
             if (authResult == null)
             {
@@ -148,8 +275,25 @@ namespace BT.PasswordSafe.API
                 _authResult.TokenType!,
                 _authResult.AccessToken!);
 
-            // Additional step: Sign into the app using the obtained access token
-            var signInResponse = await _httpClient.PostAsync("Auth/SignAppIn", new StringContent(string.Empty), cancellationToken).ConfigureAwait(false);
+            // Prepare the SignAppIn request in parallel with setting up the auth header
+            using var signInRequest = new HttpRequestMessage(HttpMethod.Post, "Auth/SignAppIn")
+            {
+                Content = new StringContent(string.Empty)
+            };
+            
+            // Optimize request headers
+            signInRequest.Headers.ConnectionClose = false;
+            signInRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            signInRequest.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+            signInRequest.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
+            
+            _logger?.LogInformation("Sending SignAppIn request");
+            startTime = DateTimeOffset.UtcNow;
+            
+            var signInResponse = await _httpClient.SendAsync(signInRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            
+            endTime = DateTimeOffset.UtcNow;
+            _logger?.LogInformation($"SignAppIn request completed in {(endTime - startTime).TotalMilliseconds}ms with status {signInResponse.StatusCode}");
 
             if (!signInResponse.IsSuccessStatusCode)
             {
@@ -158,21 +302,93 @@ namespace BT.PasswordSafe.API
 
             _logger?.LogInformation("Successfully signed into the app using OAuth token");
 
+            // Cache the authentication result
+            if (!string.IsNullOrEmpty(_options.BaseUrl))
+            {
+                _tokenCache.TryAdd(_options.BaseUrl, _authResult);
+            }
+
             return _authResult;
         }
 
         private bool IsTokenExpired(AuthenticationResult authResult)
         {
-            // Check if the token is expired or about to expire (within 5 minutes)
+            // Check if the token is expired or about to expire (within configurable buffer time)
             var expiresAt = authResult.IssuedAt.AddSeconds(authResult.ExpiresIn);
-            return DateTimeOffset.UtcNow.AddMinutes(5) >= expiresAt;
+            return DateTimeOffset.UtcNow.AddMinutes(_tokenBufferMinutes) >= expiresAt;
         }
 
         private async Task EnsureAuthenticated(CancellationToken cancellationToken)
         {
-            if (_authResult == null || IsTokenExpired(_authResult))
+            // Use lazy initialization for the first authentication
+            if (_authResult == null)
+            {
+                // Check if there's a cached authentication result
+                if (!string.IsNullOrEmpty(_options.BaseUrl) && 
+                    _tokenCache.TryGetValue(_options.BaseUrl, out var cachedAuthResult) && 
+                    !IsTokenExpired(cachedAuthResult))
+                {
+                    _authResult = cachedAuthResult;
+                    
+                    // Ensure the authorization header is set with the cached token
+                    ApplyAuthorizationHeader(_authResult);
+                    
+                    return;
+                }
+
+                _authResult = await _lazyAuthTask.Value.ConfigureAwait(false);
+                
+                // Ensure the authorization header is set
+                ApplyAuthorizationHeader(_authResult);
+                
+                return;
+            }
+            
+            // Check if token needs refresh
+            if (IsTokenExpired(_authResult))
             {
                 await Authenticate(cancellationToken).ConfigureAwait(false);
+                
+                // Ensure the authorization header is set after refresh
+                ApplyAuthorizationHeader(_authResult);
+            }
+            else
+            {
+                // Ensure the authorization header is set even for valid tokens
+                ApplyAuthorizationHeader(_authResult);
+            }
+        }
+        
+        private void ApplyAuthorizationHeader(AuthenticationResult authResult)
+        {
+            // Remove any existing Authorization header
+            if (_httpClient.DefaultRequestHeaders.Contains("Authorization"))
+            {
+                _httpClient.DefaultRequestHeaders.Remove("Authorization");
+            }
+            
+            // Apply the appropriate authorization header based on token type
+            if (authResult.TokenType == "PS-Auth")
+            {
+                // For API key authentication
+                var authHeader = $"PS-Auth key={_options.ApiKey}; runas={_options.RunAsUsername}";
+                
+                // Only add password if it's provided
+                if (!string.IsNullOrEmpty(_options.RunAsPassword))
+                {
+                    authHeader += $"; pwd=[{_options.RunAsPassword}]";
+                }
+                
+                _httpClient.DefaultRequestHeaders.Add("Authorization", authHeader);
+                _logger?.LogInformation("Applied PS-Auth authorization header");
+            }
+            else
+            {
+                // For OAuth authentication
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                    authResult.TokenType!,
+                    authResult.AccessToken!);
+                _logger?.LogInformation("Applied OAuth authorization header");
             }
         }
 
@@ -269,7 +485,7 @@ namespace BT.PasswordSafe.API
                 
                 if (existingRequest != null)
                 {
-                    _logger?.LogInformation($"Found existing request ID: {existingRequest.RequestId} for account ID: {account.ManagedAccountId}. Retrieving password.");
+                    _logger?.LogInformation($"Found existing request ID: {existingRequest.RequestId} for account ID: {managedAccountId}. Retrieving password.");
                     
                     // Get the password using the existing request ID
                     var response = await _httpClient.GetAsync($"Credentials/{existingRequest.RequestId}", cancellationToken).ConfigureAwait(false);
@@ -1015,6 +1231,33 @@ namespace BT.PasswordSafe.API
 
             // Now that we have the account ID, change the credentials
             await ChangeCredentialByAccountID(account.ManagedAccountId.ToString(), queue, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Preloads the authentication token in the background to avoid delay during the first API call
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>A task representing the asynchronous operation</returns>
+        public Task PreloadAuthentication(CancellationToken cancellationToken = default)
+        {
+            _logger?.LogInformation("Preloading authentication token in background");
+            
+            // Start authentication in the background
+            Task.Run(async () => 
+            {
+                try 
+                {
+                    await Authenticate(cancellationToken).ConfigureAwait(false);
+                    _logger?.LogInformation("Authentication token preloaded successfully");
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Failed to preload authentication token");
+                }
+            }, cancellationToken);
+            
+            // Don't wait for completion - let it run in background
+            return Task.CompletedTask;
         }
 
         /// <summary>

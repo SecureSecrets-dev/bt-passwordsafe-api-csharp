@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace BT.PasswordSafe.API.Models
 {
@@ -60,6 +60,15 @@ namespace BT.PasswordSafe.API.Models
         /// Gets or sets the default duration in minutes for password requests
         /// </summary>
         public int DefaultPasswordDuration { get; set; } = 60;
+
+        /// <summary>
+        /// Gets or sets the buffer time in minutes before token expiration when a refresh should occur
+        /// </summary>
+        /// <remarks>
+        /// Default is 5 minutes. Setting a lower value may result in more frequent token refreshes,
+        /// while a higher value ensures tokens are refreshed well before they expire.
+        /// </remarks>
+        public int TokenBufferMinutes { get; set; } = 5;
 
         /// <summary>
         /// Validates the configuration options

@@ -52,7 +52,22 @@ var serviceProvider = services.BuildServiceProvider();
 
 // Get the client from the service provider
 var client = serviceProvider.GetRequiredService<IPasswordSafeClient>();
-```
+
+// Preload authentication in the background
+client.PreloadAuthentication();
+
+// Continue with application initialization
+// By the time you make your first API call, authentication should be complete
+
+### Preloading Authentication
+
+To improve performance and user experience, you can preload authentication in the background during application startup. This avoids the delay when making the first API call:
+
+Benefits of preloading authentication:
+- Improves user experience by eliminating authentication delay on first API call
+- Authentication happens in parallel with other application initialization tasks
+- Authentication errors are logged but don't block application startup
+- Reduces latency for the first API call
 
 ### Alternate Registration Method using appsettings.json
 

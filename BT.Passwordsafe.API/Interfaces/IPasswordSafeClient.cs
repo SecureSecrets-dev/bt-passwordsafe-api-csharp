@@ -155,5 +155,12 @@ namespace BT.PasswordSafe.API.Interfaces
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Task representing the asynchronous operation</returns>
         Task ChangeCredentialByAccountName(string accountName, string? systemName = null, string? domainName = null, bool isDomainLinked = false, bool queue = false, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Preloads the authentication token in the background to avoid delay during the first API call
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>A task representing the asynchronous operation</returns>
+        Task PreloadAuthentication(CancellationToken cancellationToken = default);
     }
 }
