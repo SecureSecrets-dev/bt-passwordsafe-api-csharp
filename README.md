@@ -80,6 +80,7 @@ client.PreloadAuthentication();
 
 // Continue with application initialization
 // By the time you make your first API call, authentication should be complete
+```
 
 ### Alternate Registration Method using appsettings.json
 
